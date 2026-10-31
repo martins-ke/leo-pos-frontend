@@ -1,0 +1,51 @@
+.salesKpiGrid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.salesMoneyValue {
+  color: var(--money-val);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 640px) {
+  .salesKpiGrid.salesKpiGrid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 480px) {
+  .salesKpiGrid.salesKpiGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.625rem;
+  }
+
+  .salesKpiCard.salesKpiCard {
+    min-height: 5.5rem;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.625rem;
+  }
+
+  .salesKpiCard .salesKpiIcon {
+    display: none;
+  }
+
+  .salesKpiContent {
+    width: 100%;
+  }
+
+  .salesKpiLabel {
+    font-size: var(--font-size-xs);
+  }
+
+  .salesKpiCard .salesKpiValue {
+    font-size: var(--font-size-base);
+    line-height: 1.35;
+  }
+
+  .salesKpiCard .salesMoneyValue {
+    font-size: clamp(0.75rem, 3.8vw, 0.875rem);
+    overflow-wrap: normal;
+  }
+}

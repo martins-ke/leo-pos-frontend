@@ -1,0 +1,162 @@
+.layout {
+  display: grid;
+  grid-template-columns: minmax(220px, 280px) minmax(0, 1fr);
+  height: 100vh;
+  height: 100dvh;
+  min-height: 0;
+  overflow: hidden;
+  background: var(--bg-app);
+}
+
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  height: 100dvh;
+  min-height: 0;
+  min-width: 0;
+  overflow: hidden;
+  position: relative;
+}
+
+.topbar {
+  background: var(--topbar-bg);
+  border-bottom: 1px solid var(--topbar-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  box-shadow: var(--shadow-sm);
+  transition: background-color 0.2s, border-color 0.2s;
+}
+
+.topbarLeft {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.hamburgerBtn {
+  display: none;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-default);
+  color: var(--text-main);
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+}
+
+.hamburgerBtn:hover {
+  background: var(--border-subtle);
+}
+
+.topbarRight {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-left: auto;
+}
+
+.themeToggleBtn {
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-default);
+  color: var(--text-main);
+  padding: 0.35rem;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.themeToggleBtn:hover {
+  background: var(--border-strong);
+  transform: rotate(15deg);
+}
+
+/* Date on far right with distinct appealing color */
+.dateBadge {
+  display: inline-flex;
+  align-items: center;
+  color: var(--accent-pink);
+  font-weight: 600;
+  font-size: var(--font-size-base);
+  gap: 0.5rem;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+}
+
+.dateIcon{
+  color: var(--accent-cyan);
+}
+
+.main {
+  flex: 1;
+  min-height: 0;
+  padding: 24px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  box-sizing: border-box;
+}
+
+@media (max-width: 900px) {
+  .layout {
+    display: block;
+    height: auto;
+    min-height: 100vh;
+    overflow: visible;
+  }
+  .wrapper {
+    height: auto;
+    min-height: 100vh;
+    overflow: visible;
+  }
+  .topbar {
+    padding: 0.5rem 0.625rem;
+  }
+  .topbarRight {
+    gap: 0.5rem;
+  }
+  .hamburgerBtn {
+    display: flex;
+  }
+  .main {
+    min-height: auto;
+    padding: 1rem;
+    overflow: visible;
+  }
+  .dateBadge {
+    font-size: var(--font-size-sm);
+    gap: 0.4rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .topbar {
+    padding: 0.45rem 0.5rem;
+  }
+
+  .topbarRight {
+    gap: 0.375rem;
+  }
+
+  .themeToggleBtn {
+    width: 2.5rem;
+    height: 2.5rem;
+    padding: 0;
+  }
+
+  .dateBadge {
+    font-size: var(--font-size-xs);
+    letter-spacing: 0;
+  }
+
+  .main {
+    padding: 0.75rem;
+  }
+}

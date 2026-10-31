@@ -1,0 +1,242 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+:root {
+  /* Core brand & accents */
+  --primary: #4f46e5;
+  --primary-hover: #4338ca;
+  --primary-light: #eef2ff;
+  --primary-glow: rgba(79, 70, 229, 0.25);
+  --brand-gradient: linear-gradient(135deg, #6366f1 0%, #4338ca 100%);
+  --primary-gradient: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%);
+  --text-on-primary: #ffffff;
+  --accent-blue: #2aa1ee;
+  --accent-pink: #ef30af;
+  --accent-cyan: rgb(15, 198, 234);
+  --theme-toggle-light: #fbbf24;
+  --theme-toggle-dark: #6366f1;
+  --accent-purple-bg: rgba(168, 85, 247, 0.15);
+  --accent-purple-text: #c084fc;
+  --shadow-brand: 0 4px 12px rgba(99, 102, 241, 0.35);
+  --shadow-brand-active: 0 4px 10px rgba(99, 102, 241, 0.25);
+  --shadow-brand-glow: 0 4px 12px rgba(99, 102, 241, 0.4);
+  --shadow-success: 0 2px 8px rgba(16, 185, 129, 0.25);
+  --black: #000000;
+  --white: #ffffff;
+
+  /* Fluid type scale: relative minimums keep mobile text compact but readable. */
+  --font-size-2xs: clamp(0.5625rem, 0.55rem + 0.05vw, 0.625rem);
+  --font-size-xs: clamp(0.625rem, 0.58rem + 0.12vw, 0.6875rem);
+  --font-size-sm: clamp(0.6875rem, 0.625rem + 0.2vw, 0.75rem);
+  --font-size-md: clamp(0.75rem, 0.6875rem + 0.2vw, 0.8125rem);
+  --font-size-label: clamp(0.875rem, 0.8rem + 0.3vw, 1.0625rem);
+  --font-size-base: clamp(0.8125rem, 0.75rem + 0.25vw, 0.875rem);
+  --font-size-lg: clamp(0.875rem, 0.8125rem + 0.2vw, 0.9375rem);
+  --font-size-xl: clamp(0.9375rem, 0.875rem + 0.2vw, 1rem);
+  --font-size-2xl: clamp(1rem, 0.9375rem + 0.2vw, 1.0625rem);
+  --font-size-2xl-plus: clamp(1rem, 0.95rem + 0.25vw, 1.125rem);
+  --font-size-3xl-minus: clamp(1.0625rem, 1rem + 0.25vw, 1.1875rem);
+  --font-size-3xl: clamp(1.125rem, 1.0625rem + 0.25vw, 1.25rem);
+  --font-size-4xl: clamp(1.1875rem, 1.1rem + 0.25vw, 1.3125rem);
+  --font-size-5xl: clamp(1.375rem, 1.25rem + 0.5vw, 1.5625rem);
+  --font-size-6xl: clamp(1.5rem, 1.35rem + 0.7vw, 1.6875rem);
+  --font-size-7xl: clamp(1.625rem, 1.4rem + 1vw, 1.9375rem);
+  
+  --success: #10b981;
+  --success-dark: #059669;
+  --success-bg: #dcfce7;
+  --success-text: #15803d;
+  --success-border: #86efac;
+  
+  --warning: #f59e0b;
+  --warning-bg: #fef3c7;
+  --warning-text: #b45309;
+  --warning-border: #fde68a;
+  
+  --danger: #ef4444;
+  --danger-bg: #fee2e2;
+  --danger-text: #b91c1c;
+  --danger-border: #fca5a5;
+
+  --info-bg: #e0f2fe;
+  --info-text: #0369a1;
+
+  /* Surfaces & backgrounds (Light Theme Default) */
+  --bg-app: #f8fafc;
+  --bg-surface: #ffffff;
+  --bg-card: #ffffff;
+  --bg-card-hover: #dfe7f0;
+  --bg-subtle: #f1f5f9;
+  --bg-input: #ffffff;
+  --bg-modal-overlay: rgba(15, 23, 42, 0.65);
+  --bg-item-active: #eef2ff;
+
+  /* Typography Colors */
+  --text-main: #0f172a;
+  --text-secondary: #475569;
+  --th-color: var(--accent-blue);
+  --money-val: rgb(4, 156, 4);
+  --text-muted: #64748b;
+  --text-placeholder: #94a3b8;
+  --text-inverse: #ffffff;
+
+  /* Borders & Dividers */
+  --border-subtle: #dde5ed;
+  --border-default: #e2e8f0;
+  --border-strong: #cbd5e1;
+  --border-focus: #6366f1;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -2px rgba(0, 0, 0, 0.04);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.05);
+  --shadow-glow: 0 0 15px rgba(79, 70, 229, 0.35);
+
+  /* Sidebar & Topbar - Light Theme */
+  --sidebar-bg: #ffffff;
+  --sidebar-border: #e2e8f0;
+  --sidebar-text: #475569;
+  --sidebar-text-active: #291f1f;
+  --sidebar-link-hover: #f1f5f9;
+  --sidebar-footer-bg: #f8fafc;
+  --sidebar-user-bg: #f1f5f9;
+  --sidebar-logo-text: #0f172a;
+  --sidebar-shadow: 4px 0 20px rgba(0, 0, 0, 0.04);
+  --topbar-bg: #ffffff;
+  --topbar-border: #e2e8f0;
+
+  /* Receipt Thermal */
+  --receipt-bg: #fdfdfd;
+  --receipt-border: #cbd5e1;
+  --receipt-text: #1e293b;
+}
+
+/* Dark Theme Overrides */
+[data-theme='dark'] {
+  --primary: #859cef;
+  --primary-hover: #2c5e7d;
+  --primary-light: rgba(99, 102, 241, 0.15);
+  --primary-glow: rgba(99, 102, 241, 0.4);
+
+  --success-bg: rgba(16, 185, 129, 0.15);
+  --success-text: #34d399;
+  --success-border: rgba(16, 185, 129, 0.3);
+
+  --warning-bg: rgba(245, 158, 11, 0.15);
+  --warning-text: #fbbf24;
+  --warning-border: rgba(245, 158, 11, 0.3);
+
+  --danger-bg: rgba(239, 68, 68, 0.15);
+  --danger-text: #f87171;
+  --danger-border: rgba(239, 68, 68, 0.3);
+
+  --info-bg: rgba(14, 165, 233, 0.15);
+  --info-text: #38bdf8;
+
+  --bg-app: #0e1017;
+  --bg-surface: #111827;
+  --bg-card: #13161e;
+  --bg-card-hover: #17223b;
+  --bg-subtle: #1e293b;
+  --bg-input: #111827;
+  --bg-modal-overlay: rgba(0, 0, 0, 0.75);
+  --bg-item-active: rgba(99, 102, 241, 0.2);
+
+  --text-main: #f8fafc;
+  --text-secondary: #cbd5e1;
+  --text-muted: #94a3b8;
+  --money-val: rgb(31, 211, 31);
+  --text-placeholder: #64748b;
+  --text-inverse: #0f172a;
+
+  --border-subtle: #313a49;
+  --border-default: #26334d;
+  --border-strong: #334155;
+  --border-focus: #818cf8;
+
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+
+  --sidebar-bg: #171a20;
+  --sidebar-border: #1e293b;
+  --sidebar-text: #94a3b8;
+  --sidebar-text-active: #ffffff;
+  --sidebar-link-hover: rgba(255, 255, 255, 0.06);
+  --sidebar-footer-bg: rgba(0, 0, 0, 0.25);
+  --sidebar-user-bg: rgba(255, 255, 255, 0.03);
+  --sidebar-logo-text: #ffffff;
+  --sidebar-shadow: 4px 0 24px rgba(0, 0, 0, 0.35);
+  --topbar-bg: #171a20;
+  --topbar-border: #1e293b;
+
+  --receipt-bg: #182234;
+  --receipt-border: #334155;
+  --receipt-text: #f1f5f9;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body, html {
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: var(--bg-app);
+  color: var(--text-main);
+  line-height: 1.5;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+button {
+  font-family: inherit;
+  outline: none;
+}
+
+input, select, textarea {
+  font-family: inherit;
+  outline: none;
+}
+
+/* Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-subtle);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
+
+/* Thermal POS Print Rules */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  .receipt-printable, .receipt-printable * {
+    visibility: visible;
+  }
+  .receipt-printable {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 80mm;
+    margin: 0;
+    padding: 10px;
+    font-size: var(--font-size-md);
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--black) !important;
+    background: var(--white) !important;
+  }
+  .no-print {
+    display: none !important;
+  }
+}

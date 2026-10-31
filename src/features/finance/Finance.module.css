@@ -1,0 +1,435 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  min-width: 0;
+}
+
+.header,
+.toolbar,
+.row,
+.actions,
+.summaryGrid,
+.formGrid {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.header,
+.toolbar,
+.row {
+  justify-content: space-between;
+}
+
+.header {
+  flex-wrap: wrap;
+}
+
+.header h1 {
+  color: var(--info-text);
+  font-size: var(--font-size-4xl);
+}
+
+.header p {
+  color: var(--text-muted);
+  font-size: var(--font-size-base);
+}
+
+.shopSelect {
+  width: min(100%, 20rem);
+}
+
+.debtStatusSelect {
+  width: min(100%, 14rem);
+}
+
+.debtCustomerSelect {
+  width: 100%;
+}
+
+.panel,
+.summaryCard {
+  background: var(--bg-card);
+  border: 1px solid var(--border-default);
+  border-radius: 0.75rem;
+  padding: 1rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  min-width: 0;
+}
+
+.panel h2 {
+  color: var(--text-main);
+  font-size: var(--font-size-xl);
+}
+
+.formGrid {
+  align-items: end;
+  flex-wrap: wrap;
+}
+
+.field {
+  display: flex;
+  flex: 1 1 10rem;
+  min-width: 8rem;
+  flex-direction: column;
+  gap: 0.3rem;
+  color: var(--text-secondary);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+}
+
+.field input,
+.field select,
+.field textarea {
+  width: 100%;
+  min-height: 2.5rem;
+  padding: 0.5rem 0.625rem;
+  border: 1px solid var(--border-default);
+  border-radius: 0.4rem;
+  background: var(--bg-input);
+  color: var(--text-main);
+  font: inherit;
+}
+
+.field textarea {
+  min-height: 5rem;
+  resize: vertical;
+}
+
+.customerPicker {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.selectHint {
+  color: var(--text-muted);
+  font-size: var(--font-size-sm);
+  line-height: 1.45;
+}
+
+.primaryButton {
+  composes: primaryButton from '../../components/buttons/ActionButton.module.css';
+
+}
+
+.secondaryButton {
+  composes: secondaryButton from '../../components/buttons/ActionButton.module.css';
+}
+
+.dangerButton {
+  composes: dangerButton from '../../components/buttons/ActionButton.module.css';
+}
+
+.smallButton {
+  composes: smallButton from '../../components/buttons/ActionButton.module.css';
+}
+
+.summaryGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+}
+
+.summaryCard {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  min-width: 0;
+}
+
+.summaryLabel {
+  color: var(--text-muted);
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+}
+
+.summaryValue {
+  color: var(--text-main);
+  font-size: 1.2rem;
+  font-weight: 800;
+  overflow-wrap: anywhere;
+}
+
+.moneyValue {
+  color: var(--text-main);
+  font-size: max(1.125rem, var(--font-size-base));
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.tableWrap {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  white-space: nowrap;
+}
+
+.customerTable {
+  border-spacing: 0;
+}
+
+.customerTable thead {
+  background: var(--bg-subtle);
+}
+
+.customerTable th {
+  padding: 0.8rem 0.9rem;
+  border-bottom: 1px solid var(--border-default);
+  letter-spacing: 0.045em;
+}
+
+.customerTable th:first-child {
+  border-radius: 0.5rem 0 0;
+}
+
+.customerTable th:last-child {
+  border-radius: 0 0.5rem 0 0;
+}
+
+.customerTable td {
+  padding: 0.8rem 0.9rem;
+}
+
+.customerTable tbody tr {
+  transition: background-color 0.15s ease;
+}
+
+.customerTable tbody tr:hover {
+  background: var(--bg-subtle);
+}
+
+.customerTable .customerActions {
+  gap: 0.375rem;
+  flex-wrap: nowrap;
+}
+
+.customerTable .customerActions button {
+  min-height: 2rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.375rem;
+  font-size: var(--font-size-sm);
+  line-height: 1.2;
+}
+
+.table th,
+.table td {
+  padding: 0.65rem;
+  border-bottom: 1px solid var(--border-subtle);
+  text-align: left;
+  vertical-align: middle;
+}
+
+.table th {
+  color: var(--text-muted);
+  font-size: var(--font-size-sm);
+  text-transform: uppercase;
+}
+
+.table td {
+  color: var(--text-secondary);
+  font-size: var(--font-size-base);
+}
+
+.table strong {
+  color: var(--text-main);
+}
+
+.badge {
+  display: inline-block;
+  padding: 0.2rem 0.5rem;
+  border-radius: 1rem;
+  background: var(--success-bg);
+  color: var(--success-text);
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+}
+
+.badgeWarning {
+  background: var(--warning-bg);
+  color: var(--warning-text);
+}
+
+.badgeDanger {
+  background: var(--danger-bg);
+  color: var(--danger-text);
+}
+
+.alert {
+  border-radius: 0.5rem;
+  padding: 0.75rem 1rem;
+  background: var(--info-bg);
+  color: var(--info-text);
+  font-size: var(--font-size-base);
+}
+
+.alertError {
+  background: var(--danger-bg);
+  color: var(--danger-text);
+}
+
+.empty {
+  padding: 1.5rem;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.actions {
+  flex-wrap: wrap;
+}
+
+.actions > button,
+.actions > select {
+  max-width: 100%;
+}
+
+.actions > .debtStatusSelect {
+  flex: 0 1 12rem;
+  min-width: 9rem;
+}
+
+.subtle {
+  color: var(--text-muted);
+  font-size: var(--font-size-sm);
+}
+
+@media (max-width: 640px) {
+  .page {
+    gap: 0.875rem;
+  }
+
+  .panel {
+    gap: 0.75rem;
+  }
+
+  .panel,
+  .summaryCard {
+    padding: 0.75rem;
+    border-radius: 0.625rem;
+  }
+
+  .formGrid {
+    align-items: stretch;
+  }
+
+  .formGrid > button {
+    width: 100%;
+    min-height: 2.75rem;
+  }
+
+  .field input,
+  .field select,
+  .field textarea {
+    font-size: 1rem;
+  }
+
+  .customerTable {
+    min-width: 46rem;
+  }
+
+  .customerTable th,
+  .customerTable td {
+    padding: 0.55rem 0.625rem;
+  }
+
+  .customerTable .customerActions button {
+    min-height: 2rem;
+    padding: 0.2rem 0.4rem;
+    font-size: var(--font-size-xs);
+  }
+
+  .debtStatusSelect {
+    width: 100%;
+  }
+  .actions {
+    gap: 0.5rem;
+  }
+
+  .header {
+    align-items: stretch;
+  }
+
+  .header > div {
+    min-width: 0;
+  }
+
+  .header h1 {
+    font-size: var(--font-size-3xl);
+    overflow-wrap: anywhere;
+    line-height: 1.25;
+  }
+
+  .header p {
+    font-size: var(--font-size-sm);
+    line-height: 1.4;
+  }
+
+  .shopSelect {
+    width: 100%;
+  }
+
+  .toolbar {
+    align-items: stretch;
+  }
+
+  .toolbar > h2 {
+    width: 100%;
+  }
+
+  .toolbar > .actions {
+    width: 100%;
+    align-items: stretch;
+  }
+
+  .toolbar > .actions > button,
+  .toolbar > .actions > select {
+    flex: 1 1 8rem;
+    min-width: 0;
+    min-height: 2.5rem;
+  }
+
+  .summaryGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.625rem;
+  }
+
+  .summaryCard {
+    min-width: 0;
+    gap: 0.25rem;
+  }
+
+  .summaryValue {
+    font-size: max(1.25rem, var(--font-size-2xl-plus));
+    line-height: 1.25;
+  }
+
+  .moneyValue {
+    font-size: 1.125rem;
+  }
+
+  .tableWrap {
+    overscroll-behavior-x: contain;
+    scrollbar-width: thin;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .table {
+    min-width: 38rem;
+  }
+
+  .table th,
+  .table td {
+    padding: 0.55rem;
+  }
+
+}

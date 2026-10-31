@@ -1,0 +1,391 @@
+.page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-app);
+  padding: 20px 16px;
+  transition: background-color 0.2s ease;
+}
+
+.card {
+  background: var(--bg-card);
+  padding: 2rem;
+  border-radius: 2rem;
+  width: 100%;
+  max-width: 480px;
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--border-default);
+  transition: all 0.2s ease;
+}
+
+.brandRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.brandIcon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: var(--brand-gradient);
+  color: var(--text-on-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--font-size-5xl);
+  font-weight: 800;
+  box-shadow: var(--shadow-brand-glow);
+}
+
+.brand {
+  font-size: var(--font-size-6xl);
+  font-weight: 800;
+  color: var(--text-main);
+  letter-spacing: -0.5px;
+}
+
+.brand span {
+  font-size: var(--font-size-base);
+  color: var(--primary);
+  font-weight: 700;
+  text-transform: uppercase;
+  margin-left: 6px;
+  letter-spacing: 1px;
+}
+
+.card h2 {
+  font-size: var(--font-size-4xl);
+  font-weight: 800;
+  color: var(--text-main);
+  margin: 0 0 4px;
+}
+
+.sub {
+  color: var(--text-muted);
+  font-size: var(--font-size-base);
+  margin-bottom: 22px;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.stepProgress {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 20px;
+}
+
+.stepIndicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-muted);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.stepIndicator > span:first-child {
+  display: grid;
+  width: 26px;
+  aspect-ratio: 1;
+  place-items: center;
+  border: 1px solid var(--border-strong);
+  border-radius: 50%;
+  background: var(--bg-subtle);
+}
+
+.stepCurrent {
+  color: var(--primary);
+}
+
+.stepCurrent > span:first-child,
+.stepComplete > span:first-child {
+  border-color: var(--primary);
+  background: var(--primary);
+  color: var(--text-on-primary);
+}
+
+.stepConnector {
+  height: 1px;
+  flex: 1;
+  background: var(--border-strong);
+}
+
+.stepConnectorComplete {
+  background: var(--primary);
+}
+
+.formStep {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.rolePicker {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.rolePill {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.35rem;
+  border-radius: 0.45rem;
+  border: 1px solid var(--border-strong);
+  background: var(--bg-surface);
+  color: var(--text-secondary);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.5s ease;
+}
+
+.rolePill span {
+  white-space: nowrap;
+}
+
+.roleActive {
+  background: var(--bg-item-active);
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.form label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: var(--font-size-label);
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.form input, .form select {
+  padding: 10px 14px;
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  font-size: var(--font-size-base);
+  background: var(--bg-input);
+  color: var(--text-main);
+  transition: border-color 0.15s;
+}
+
+.form input:focus, .form select:focus {
+  border-color: var(--border-focus);
+  box-shadow: 0 0 0 3px var(--primary-glow);
+}
+
+.btn {
+  background: var(--primary-gradient);
+  color: var(--text-on-primary);
+  border: none;
+  padding: 12px;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: var(--font-size-lg);
+  cursor: pointer;
+  margin-top: 6px;
+  box-shadow: var(--shadow-sm);
+  transition: all 0.15s ease;
+}
+
+.formActions {
+  display: flex;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.formActions .btn {
+  flex: 1;
+  margin-top: 0;
+}
+
+.backBtn {
+  padding: 12px 18px;
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  background: var(--bg-surface);
+  color: var(--text-secondary);
+  font-size: var(--font-size-lg);
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.backBtn:hover {
+  border-color: var(--primary);
+  background: var(--bg-subtle);
+}
+
+.btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+.btn:disabled {
+  background: var(--border-strong);
+  color: var(--text-placeholder);
+  cursor: not-allowed;
+}
+
+.error {
+  background: var(--danger-bg);
+  color: var(--danger-text);
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-size: var(--font-size-md);
+  font-weight: 500;
+  margin-bottom: 14px;
+  border: 1px solid var(--danger-border);
+}
+
+.success {
+  background: var(--success-bg);
+  color: var(--success-text);
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-size: var(--font-size-md);
+  font-weight: 600;
+  margin-bottom: 14px;
+  border: 1px solid var(--success-border);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.foot {
+  text-align: center;
+  margin-top: 16px;
+  font-size: var(--font-size-base);
+  color: var(--text-muted);
+}
+
+.foot a {
+  color: var(--primary);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.foot a:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 480px) {
+  .page {
+    padding: 16px 12px;
+  }
+
+  .card {
+    padding: 24px 18px;
+    border-radius: 14px;
+    max-width: 100%;
+  }
+
+  .brandRow {
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+
+  .brandIcon {
+    width: 38px;
+    height: 38px;
+    font-size: var(--font-size-5xl);
+  }
+
+  .brand {
+    font-size: var(--font-size-5xl);
+  }
+
+  .card h2 {
+    font-size: var(--font-size-5xl);
+  }
+
+  .sub {
+    margin-bottom: 18px;
+    font-size: var(--font-size-sm);
+  }
+
+  .stepProgress {
+    gap: 6px;
+    align-items: flex-start;
+  }
+
+  .stepIndicator {
+    gap: 6px;
+    font-size: var(--font-size-xs);
+    line-height: 1.2;
+  }
+
+  .stepIndicator > span:last-child {
+    max-width: 80px;
+  }
+
+  .rolePicker {
+    grid-template-columns: 1fr;
+  }
+
+  .rolePill {
+    justify-content: flex-start;
+    padding: 10px 12px;
+  }
+
+  .form label {
+    font-size: var(--font-size-base);
+  }
+
+  .form input,
+  .form select {
+    padding: 11px 12px;
+    font-size: var(--font-size-base);
+  }
+
+  .formActions {
+    flex-direction: column-reverse;
+  }
+
+  .formActions .btn,
+  .backBtn {
+    width: 100%;
+  }
+
+  .btn {
+    min-height: 2.5rem;
+    padding: 0.25rem 0.45rem;
+    font-size: var(--font-size-base);
+  }
+
+  .backBtn,
+  .rolePill {
+    min-height: 2.5rem;
+    padding: 0.25rem 0.45rem;
+    font-size: var(--font-size-base);
+  }
+
+  .foot {
+    font-size: var(--font-size-sm);
+  }
+}
+
+@media (max-width: 360px) {
+  .card {
+    padding: 20px 14px;
+  }
+
+  .stepIndicator > span:last-child {
+    max-width: 70px;
+  }
+
+  .brand {
+    font-size: var(--font-size-4xl);
+  }
+}
