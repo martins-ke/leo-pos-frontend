@@ -1,91 +1,158 @@
 import { Link } from 'react-router-dom';
+import {
+  MdArrowForward,
+  MdArrowOutward,
+  MdGroups,
+  MdInventory2,
+  MdInsights,
+  MdPointOfSale,
+  MdStorefront,
+  MdTaskAlt,
+} from 'react-icons/md';
+import LeoMark from '../components/branding/LeoMark';
 import styles from './LandingPage.module.css';
 
-const features = [
+const capabilities = [
   {
-    icon: '▦',
-    title: 'Smart Inventory',
-    description: 'Track products, monitor stock levels and stay informed about your inventory in real time.',
+    icon: MdPointOfSale,
+    title: 'Sell without the scramble',
+    description: 'Ring up orders, record payments and keep checkout moving from one simple point of sale.',
   },
   {
-    icon: '↗',
-    title: 'Sales Management',
-    description: 'Process transactions, track sales and understand your business performance.',
+    icon: MdInventory2,
+    title: 'Know what is on your shelves',
+    description: 'Keep product quantities and stock changes together, so you can act before a gap catches you out.',
   },
   {
-    icon: '◉',
-    title: 'Multi-Shop Management',
-    description: 'Manage multiple business locations from one centralized platform.',
+    icon: MdInsights,
+    title: 'Understand how the day went',
+    description: 'Review sales and business activity in one place instead of piecing the story together.',
   },
   {
-    icon: '▤',
-    title: 'Business Reports',
-    description: 'Get meaningful insights into revenue, expenses, profits and business growth.',
+    icon: MdStorefront,
+    title: 'Keep every shop in view',
+    description: 'Manage your outlets from one account and see how each part of your business is doing.',
   },
   {
-    icon: '♙',
-    title: 'Staff Management',
-    description: 'Manage employees, assign responsibilities and control access to your business.',
+    icon: MdGroups,
+    title: 'Bring your team into the flow',
+    description: 'Give staff access to the tools they need and keep everyday work organized.',
   },
   {
-    icon: '⌁',
-    title: 'Customer Management',
-    description: 'Maintain customer records, monitor debts and build stronger customer relationships.',
+    icon: MdTaskAlt,
+    title: 'Keep customer records close',
+    description: 'Find customer details and balances alongside the sales and service they relate to.',
   },
 ];
 
-function Logo() {
+const dailySteps = [
+  {
+    number: '01',
+    icon: MdPointOfSale,
+    title: 'Make the sale',
+    description: 'Record what went out and how it was paid for as you serve each customer.',
+    detail: 'CHECK OUT',
+  },
+  {
+    number: '02',
+    icon: MdInventory2,
+    title: 'Stay ahead of stock',
+    description: 'Keep product quantities connected to sales, so you know what needs attention.',
+    detail: 'TRACK PRODUCTS',
+  },
+  {
+    number: '03',
+    icon: MdInsights,
+    title: 'See where you stand',
+    description: 'Bring the day’s activity into focus and decide what your shop needs next.',
+    detail: 'REVIEW YOUR DAY',
+  },
+];
+
+function Logo({ compact = false }) {
   return (
-    <div className={styles.logo}>
-      <div className={styles.logoIcon}>
-        <svg viewBox="0 0 40 40" fill="none">
-          {/* Calendar frame */}
-          <rect
-            x="5"
-            y="9"
-            width="30"
-            height="26"
-            rx="6"
-            stroke="currentColor"
-            strokeWidth="2.5"
-          />
+    <span className={`${styles.logo} ${compact ? styles.compactLogo : ''}`}>
+      <span className={styles.logoIcon}><LeoMark /></span>
+      <span>Leo<span className={styles.logoDot}>.</span></span>
+    </span>
+  );
+}
 
-          {/* Calendar header */}
-          <path
-            d="M5 16H35"
-            stroke="currentColor"
-            strokeWidth="2.5"
-          />
-
-          {/* Calendar rings */}
-          <path
-            d="M13 5V12M27 5V12"
-            stroke="currentColor"
-            strokeWidth="2.5"
-            strokeLinecap="round"
-          />
-
-          {/* Sunrise */}
-          <path
-            d="M13 27C13 23.1 16.1 20 20 20C23.9 20 27 23.1 27 27"
-            stroke="currentColor"
-            strokeWidth="2.5"
-            strokeLinecap="round"
-          />
-
-          {/* Horizon */}
-          <path
-            d="M11 28H29"
-            stroke="currentColor"
-            strokeWidth="2.5"
-            strokeLinecap="round"
-          />
-        </svg>
+function DashboardPreview() {
+  return (
+    <div className={styles.dashboardFrame} aria-label="Illustrative shop dashboard">
+      <div className={styles.dashboardTopbar}>
+        <Logo compact />
+        <span className={styles.sampleBadge}>SAMPLE SHOP</span>
       </div>
 
-      <span>
-        Leo<span className={styles.logoDot}>.</span>
-      </span>
+      <div className={styles.dashboardIntro}>
+        <div>
+          <span className={styles.dashboardKicker}>SHOP OVERVIEW</span>
+          <h2>Today at a glance</h2>
+        </div>
+        <span className={styles.todayPill}>TODAY</span>
+      </div>
+
+      <div className={styles.metricGrid}>
+        <article className={styles.metricCard}>
+          <span>Sales today</span>
+          <strong>KSh 84,500</strong>
+          <small>Recorded sales</small>
+        </article>
+        <article className={styles.metricCard}>
+          <span>Transactions</span>
+          <strong>156</strong>
+          <small>Completed orders</small>
+        </article>
+        <article className={styles.metricCard}>
+          <span>Products</span>
+          <strong>248</strong>
+          <small>In your catalogue</small>
+        </article>
+      </div>
+
+      <div className={styles.dashboardDetails}>
+        <section className={styles.salesPanel} aria-label="Illustrative weekly sales chart">
+          <div className={styles.panelHeading}>
+            <div>
+              <span className={styles.dashboardKicker}>SALES ACTIVITY</span>
+              <h3>A week in view</h3>
+            </div>
+            <span className={styles.periodLabel}>This week</span>
+          </div>
+          <div className={styles.chart} aria-hidden="true">
+            {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((day, index) => (
+              <div className={styles.chartColumn} key={`${day}-${index}`}>
+                <span className={styles.chartBar} />
+                <small>{day}</small>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section className={styles.activityPanel} aria-label="Illustrative recent activity">
+          <div className={styles.panelHeading}>
+            <div>
+              <span className={styles.dashboardKicker}>RECENT ACTIVITY</span>
+              <h3>What’s moving</h3>
+            </div>
+            <MdArrowOutward aria-hidden="true" />
+          </div>
+          <div className={styles.activityRow}>
+            <span className={styles.activityIcon}><MdPointOfSale aria-hidden="true" /></span>
+            <span><strong>Sale recorded</strong><small>Today, 10:42 am</small></span>
+            <b>+ KSh 2,400</b>
+          </div>
+          <div className={styles.activityRow}>
+            <span className={`${styles.activityIcon} ${styles.stockIcon}`}><MdInventory2 aria-hidden="true" /></span>
+            <span><strong>Stock updated</strong><small>Today, 10:18 am</small></span>
+            <b>12 items</b>
+          </div>
+        </section>
+      </div>
+
+      <p className={styles.sampleNote}>Illustrative preview · figures shown are sample data</p>
     </div>
   );
 }
@@ -93,289 +160,153 @@ function Logo() {
 export default function LandingPage() {
   return (
     <main className={styles.page}>
-
-      {/* NAVIGATION */}
       <header className={styles.header}>
-        <nav className={styles.nav}>
-          <Link to="/" className={styles.logoLink}>
+        <nav className={styles.nav} aria-label="Main navigation">
+          <Link to="/" className={styles.logoLink} aria-label="Leo home">
             <Logo />
           </Link>
 
           <div className={styles.navLinks}>
-            <a href="#features">Features</a>
-            <a href="#about">Why Leo</a>
-            <a href="#contact">Contact</a>
+            <a href="#how-it-works">How it works</a>
+            <a href="#tools">What you can do</a>
           </div>
 
           <div className={styles.navActions}>
-            <Link to="/login" className={styles.loginBtn}>
-              Login
-            </Link>
+            <Link to="/login" className={styles.loginBtn}>Log in</Link>
             <Link to="/register" className={styles.navCta}>
-              Get Started <span>→</span>
+              Create your shop <MdArrowOutward aria-hidden="true" />
             </Link>
           </div>
         </nav>
       </header>
 
-      {/* HERO */}
       <section className={styles.hero}>
         <div className={styles.heroContent}>
-          <div className={styles.badge}>
-            <span className={styles.badgeDot}></span>
-            SMARTER BUSINESS MANAGEMENT
-          </div>
-
-          <h1>
-            Run your business.
-            <br />
-            <span>Grow without limits.</span>
-          </h1>
-
+          <span className={styles.eyebrow}>
+            <span className={styles.eyebrowMark} />
+            FOR THE PEOPLE RUNNING THE SHOP
+          </span>
+          <h1>Run the shop.<br /><span>Know the numbers.</span></h1>
           <p className={styles.heroDescription}>
-            Meet Leo, your all-in-one business management platform.
-            Manage sales, inventory, staff and multiple shops from
-            one powerful dashboard.
+            Make sales, keep track of stock and understand how your business is doing—all in one
+            straightforward place.
           </p>
-
           <div className={styles.heroActions}>
             <Link to="/register" className={styles.primaryBtn}>
-              Get Started Free <span>→</span>
+              Get started with Leo <MdArrowForward aria-hidden="true" />
             </Link>
-            <a href="#features" className={styles.secondaryBtn}>
-              Explore Features
-            </a>
+            <a href="#how-it-works" className={styles.secondaryBtn}>See how it works</a>
           </div>
-
-          <div className={styles.heroTrust}>
-            <div className={styles.trustIcon}>✓</div>
-            <span>Everything your business needs, in one place.</span>
+          <div className={styles.heroNote}>
+            <span className={styles.noteIcon} aria-hidden="true"><MdTaskAlt /></span>
+            Point of sale, stock and shop activity—working together.
           </div>
         </div>
 
-        {/* DASHBOARD PREVIEW */}
         <div className={styles.heroVisual}>
-          <div className={styles.glow}></div>
+          <DashboardPreview />
+        </div>
+      </section>
 
-          <div className={styles.dashboardPreview}>
-            <div className={styles.previewHeader}>
-              <Logo />
-              <span className={styles.liveBadge}>
-                <span></span> LIVE OVERVIEW
-              </span>
-            </div>
-
-            <div className={styles.previewWelcome}>
-              <div>
-                <small>BUSINESS OVERVIEW</small>
-                <h3>Your business at a glance.</h3>
-              </div>
-              <div className={styles.previewAvatar}>JD</div>
-            </div>
-
-            <div className={styles.previewStats}>
-              <div className={styles.statCard}>
-                <span>Total Sales</span>
-                <h3>KSh 84,500</h3>
-                <small className={styles.positive}>↑ Business revenue</small>
-              </div>
-
-              <div className={styles.statCard}>
-                <span>Products</span>
-                <h3>248</h3>
-                <small>Inventory items</small>
-              </div>
-
-              <div className={styles.statCard}>
-                <span>Transactions</span>
-                <h3>156</h3>
-                <small>Sales recorded</small>
-              </div>
-            </div>
-
-            <div className={styles.chartCard}>
-              <div className={styles.chartHeading}>
-                <div>
-                  <small>SALES PERFORMANCE</small>
-                  <h3>Revenue overview</h3>
-                </div>
-                <span>This week⌄</span>
-              </div>
-
-              <div className={styles.chart}>
-                {[35, 55, 42, 75, 58, 90, 68, 100, 78, 88, 65, 95].map(
-                  (height, index) => (
-                    <div className={styles.chartColumn} key={index}>
-                      <div style={{ height: `${height}%` }}></div>
-                    </div>
-                  )
-                )}
-              </div>
-
-              <div className={styles.chartLabels}>
-                <span>Mon</span>
-                <span>Tue</span>
-                <span>Wed</span>
-                <span>Thu</span>
-                <span>Fri</span>
-                <span>Sat</span>
-                <span>Sun</span>
-              </div>
-            </div>
-
-            <div className={styles.previewBottom}>
-              <div className={styles.bottomIcon}>✓</div>
-              <div>
-                <strong>Your business, under control.</strong>
-                <small>All your operations in one place.</small>
-              </div>
-            </div>
-          </div>
-
-          <div className={styles.floatingCard}>
-            <div className={styles.floatingIcon}>↗</div>
-            <div>
-              <strong>Real-time insights</strong>
-              <small>Know your numbers.</small>
-            </div>
+      <section className={styles.proofStrip} aria-label="Tools included with Leo">
+        <div className={styles.proofInner}>
+          <p>THE ESSENTIALS FOR YOUR EVERYDAY</p>
+          <div className={styles.proofItems}>
+            <span><MdPointOfSale aria-hidden="true" /> Sales</span>
+            <span><MdInventory2 aria-hidden="true" /> Stock</span>
+            <span><MdInsights aria-hidden="true" /> Business activity</span>
+            <span><MdGroups aria-hidden="true" /> Your team</span>
+            <span><MdStorefront aria-hidden="true" /> Multiple shops</span>
           </div>
         </div>
       </section>
 
-      {/* TRUST STRIP */}
-      <section className={styles.trustStrip}>
-        <p>ONE PLATFORM. COMPLETE BUSINESS CONTROL.</p>
-        <div className={styles.trustItems}>
-          <span>✦ Sales</span>
-          <span>✦ Inventory</span>
-          <span>✦ Employees</span>
-          <span>✦ Analytics</span>
-          <span>✦ Multiple Shops</span>
-        </div>
-      </section>
-
-      {/* FEATURES */}
-      <section className={styles.features} id="features">
+      <section className={styles.workflow} id="how-it-works">
         <div className={styles.sectionHeading}>
-          <span className={styles.sectionLabel}>POWERFUL FEATURES</span>
-          <h2>Everything you need to<br />run a smarter business.</h2>
-          <p>
-            Stop juggling different tools. Leo brings your essential
-            business operations together in one place.
-          </p>
+          <span className={styles.sectionLabel}>A BETTER WAY THROUGH THE DAY</span>
+          <h2>The work is connected.<br />Your tools should be too.</h2>
+          <p>Leo brings the everyday tasks of running a shop into one clear, practical flow.</p>
         </div>
 
-        <div className={styles.featureGrid}>
-          {features.map((feature, index) => (
-            <div className={styles.featureCard} key={feature.title}>
-              <div className={styles.featureIcon}>{feature.icon}</div>
-              <h3>{feature.title}</h3>
-              <p>{feature.description}</p>
-              <span className={styles.featureNumber}>
-                0{index + 1}
-              </span>
-            </div>
+        <div className={styles.workflowGrid}>
+          {dailySteps.map(({ number, icon: Icon, title, description, detail }) => (
+            <article className={styles.workflowCard} key={number}>
+              <div className={styles.workflowCardTop}>
+                <span className={styles.stepNumber}>{number}</span>
+                <span className={styles.workflowIcon}><Icon aria-hidden="true" /></span>
+              </div>
+              <h3>{title}</h3>
+              <p>{description}</p>
+              <span className={styles.workflowDetail}>{detail}<MdArrowForward aria-hidden="true" /></span>
+            </article>
           ))}
         </div>
       </section>
 
-      {/* ABOUT / VALUE */}
-      <section className={styles.about} id="about">
-        <div className={styles.aboutContent}>
-          <span className={styles.sectionLabel}>BUSINESS WITHOUT COMPLEXITY</span>
-          <h2>
-            Less time managing.
-            <br />
-            <span>More time growing.</span>
-          </h2>
+      <section className={styles.capabilities} id="tools">
+        <div className={styles.capabilitiesIntro}>
+          <span className={styles.sectionLabel}>BUILT AROUND YOUR SHOP</span>
+          <h2>Less switching.<br /><span>More seeing the whole picture.</span></h2>
           <p>
-            Whether you operate one shop or multiple branches,
-            Leo gives you the visibility and tools to make better
-            business decisions.
+            Sales, stock, customers and your team are part of the same business day. Leo helps you
+            keep the details together as your shop grows.
           </p>
-
-          <div className={styles.aboutPoints}>
-            <div><span>✓</span> Centralized business management</div>
-            <div><span>✓</span> Monitor multiple shop locations</div>
-            <div><span>✓</span> Make informed business decisions</div>
-          </div>
-
-          <Link to="/register" className={styles.primaryBtn}>
-            Start Managing Smarter →
+          <Link to="/register" className={styles.textLink}>
+            Bring your shop into focus <MdArrowForward aria-hidden="true" />
           </Link>
         </div>
 
-        <div className={styles.aboutVisual}>
-          <div className={styles.aboutCircle}></div>
-          <div className={styles.aboutCard}>
-            <Logo />
-            <div className={styles.aboutCardIcon}>⌁</div>
-            <h3>One platform.</h3>
-            <h3 className={styles.greenText}>Every operation.</h3>
-            <p>Your entire business ecosystem, connected.</p>
-            <div className={styles.aboutCardLine}></div>
-            <div className={styles.aboutCardFooter}>
-              <span>SALES</span>
-              <span>STOCK</span>
-              <span>GROWTH</span>
-            </div>
-          </div>
+        <div className={styles.capabilityGrid}>
+          {capabilities.map(({ icon: Icon, title, description }) => (
+            <article className={styles.capabilityCard} key={title}>
+              <span className={styles.capabilityIcon}><Icon aria-hidden="true" /></span>
+              <div>
+                <h3>{title}</h3>
+                <p>{description}</p>
+              </div>
+            </article>
+          ))}
         </div>
       </section>
 
-      {/* CTA */}
-      <section className={styles.cta} id="contact">
+      <section className={styles.cta}>
         <div className={styles.ctaContent}>
-          <span>YOUR BUSINESS DESERVES BETTER</span>
-          <h2>Ready to take control<br />of your business?</h2>
-          <p>
-            Start managing your business smarter with Leo.
-          </p>
+          <span className={styles.ctaEyebrow}>MAKE TODAY A LITTLE CLEARER</span>
+          <h2>Ready to get your shop in sync?</h2>
+          <p>Bring your day-to-day business into one place with Leo.</p>
           <Link to="/register" className={styles.ctaBtn}>
-            Get Started Today <span>→</span>
+            Create your shop <MdArrowForward aria-hidden="true" />
           </Link>
         </div>
+        <div className={styles.ctaMark} aria-hidden="true"><LeoMark /></div>
       </section>
 
-      {/* FOOTER */}
       <footer className={styles.footer}>
         <div className={styles.footerMain}>
           <div className={styles.footerBrand}>
-            <Logo />
-            <p>
-              Smarter business management.
-              One powerful platform.
-            </p>
+            <Link to="/" className={styles.logoLink} aria-label="Leo home"><Logo /></Link>
+            <p>Clearer shop days start with the right things in one place.</p>
           </div>
 
           <div className={styles.footerLinks}>
             <div>
-              <h4>Platform</h4>
-              <a href="#features">Features</a>
-              <a href="#about">Why Leo</a>
-              <Link to="/register">Get Started</Link>
+              <h2>Explore</h2>
+              <a href="#how-it-works">How it works</a>
+              <a href="#tools">What you can do</a>
             </div>
-
             <div>
-              <h4>Account</h4>
-              <Link to="/login">Login</Link>
-              <Link to="/register">Create Account</Link>
-            </div>
-
-            <div>
-              <h4>Explore</h4>
-              <a href="#contact">Contact</a>
-              <a href="#features">Our Platform</a>
+              <h2>Your account</h2>
+              <Link to="/login">Log in</Link>
+              <Link to="/register">Create your shop</Link>
             </div>
           </div>
         </div>
 
         <div className={styles.footerBottom}>
-          <span>© {new Date().getFullYear()} Brian omusugu. All rights reserved.</span>
-          <span>Built for businesses that want to grow.</span>
+          <span>© {new Date().getFullYear()} Leo. All rights reserved.</span>
+          <span>Made for the work of today.</span>
         </div>
       </footer>
-
     </main>
   );
 }
