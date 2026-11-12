@@ -21,11 +21,13 @@
 
 .topbar {
   background: var(--topbar-bg);
-  border-bottom: 1px solid var(--topbar-border);
+  border-bottom: var(--border-width) solid var(--topbar-border);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.5rem;
+  padding: var(--space-2);
   position: sticky;
   top: 0;
   z-index: 50;
@@ -36,16 +38,16 @@
 .topbarLeft {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: var(--space-3);
 }
 
 .hamburgerBtn {
   display: none;
   background: var(--bg-subtle);
-  border: 1px solid var(--border-default);
+  border: var(--border-width) solid var(--border-default);
   color: var(--text-main);
   cursor: pointer;
-  padding: 0.25rem;
+  padding: var(--space-1);
   border-radius: 50%;
   transition: all 0.3s ease;
 }
@@ -54,16 +56,52 @@
   background: var(--border-subtle);
 }
 
+/* Universal Mobile Post-Login Logo (Universal Orange Badge + Bluish Mark) */
+.mobileLogo {
+  display: none;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.mobileLogoIcon {
+  width: 2rem;
+  height: 2rem;
+  border-radius: var(--radius-lg);
+  background: linear-gradient(135deg, #ff6a00 0%, #ff8833 100%);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  box-shadow: 0 3px 12px rgba(255, 106, 0, 0.25);
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+
+.mobileLogoIcon svg {
+  width: 78%;
+  height: 78%;
+}
+
+.mobileLogoText {
+  font-size: 1.2rem;
+  font-weight: 850;
+  letter-spacing: -0.04em;
+  color: var(--text-main);
+  line-height: 1;
+}
+
+.mobileLogoDot {
+  color: #ff6a00;
+}
+
 .topbarRight {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: var(--space-3);
   margin-left: auto;
 }
 
 .themeToggleBtn {
   background: var(--bg-subtle);
-  border: 1px solid var(--border-default);
+  border: var(--border-width) solid var(--border-default);
   color: var(--text-main);
   padding: 0.35rem;
   border-radius: 50%;
@@ -86,7 +124,7 @@
   color: var(--accent-pink);
   font-weight: 600;
   font-size: var(--font-size-base);
-  gap: 0.5rem;
+  gap: var(--space-2);
   letter-spacing: 0.3px;
   white-space: nowrap;
 }
@@ -98,7 +136,7 @@
 .main {
   flex: 1;
   min-height: 0;
-  padding: 24px;
+  padding: var(--space-6);
   overflow-y: auto;
   overflow-x: hidden;
   box-sizing: border-box;
@@ -117,17 +155,20 @@
     overflow: visible;
   }
   .topbar {
-    padding: 0.5rem 0.625rem;
+    padding: var(--space-2) var(--space-2-5);
   }
   .topbarRight {
-    gap: 0.5rem;
+    gap: var(--space-2);
   }
   .hamburgerBtn {
     display: flex;
   }
+  .mobileLogo {
+    display: inline-flex;
+  }
   .main {
     min-height: auto;
-    padding: 1rem;
+    padding: var(--space-4);
     overflow: visible;
   }
   .dateBadge {
@@ -138,11 +179,11 @@
 
 @media (max-width: 480px) {
   .topbar {
-    padding: 0.45rem 0.5rem;
+    padding: 0.45rem var(--space-2);
   }
 
   .topbarRight {
-    gap: 0.375rem;
+    gap: var(--space-1-5);
   }
 
   .themeToggleBtn {
@@ -157,6 +198,15 @@
   }
 
   .main {
-    padding: 0.75rem;
+    padding: var(--space-3);
+  }
+
+  .mobileLogoText {
+    font-size: 1.05rem;
+  }
+
+  .mobileLogoIcon {
+    width: 1.85rem;
+    height: 1.85rem;
   }
 }

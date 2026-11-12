@@ -94,7 +94,7 @@ export default function ShopsPage() {
 
   const launchPosForShop = (shopId) => {
     localStorage.setItem('leo_active_shop', shopId);
-    navigate('/pos');
+    navigate('/owner/pos');
   };
 
   return (

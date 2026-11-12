@@ -1,36 +1,48 @@
-# React + Vite
+# Leo Frontend
 
-## Feature organization
+Leo is a React single-page application for retail shop owners and staff. It provides public landing, login, owner registration, platform setup, and role-protected shop workflows for point of sale, inventory, sales, customers, staff, and finance.
 
-Feature-specific screens and styles live together under `src/features/`:
+The application uses React Router, feature-local CSS Modules, shared components under `src/components/`, and a separate Spring Boot API. It is not currently a PWA or server-rendered application.
 
-- `auth/` contains login and registration screens and shared auth styles.
-- `dashboard/` contains the dashboard screen and its operational page styles.
-- `finance/` contains accounts, customers, debts, expenses, and stock-use screens and shared finance styles.
-- `pos/` contains the point-of-sale screen and its stylesheet.
-- `inventory/` contains the inventory screen and its stylesheet.
-- `sales/` contains the sales ledger and its stylesheet.
-- `shops/` contains shop outlet management and its stylesheet.
-- `staff/` contains staff management.
+## Local development
 
-Feature-specific styles belong beside their screens; reusable finance and operational styles remain in their corresponding feature stylesheets.
+Requirements: Node.js supported by the installed Vite release and npm.
 
-Paged transaction and inventory lists use `PaginationControls`. The sales ledger keeps its existing client-side pagination and orders results newest-first across all selected shops; shop outlets are also paginated.
+```sh
+npm install
+npm run dev
+```
 
-## Shared component organization
+By default, the frontend API client uses `http://localhost:8181`. Set `VITE_API_BASE_URL` in a local environment file when the API runs at another origin. In production, use an HTTPS API origin or same-origin reverse proxy. Frontend environment variables are public build-time values; never place secrets in `VITE_*`.
 
-Shared UI components live under `src/components/` grouped by responsibility:
+## Available checks
 
-- `feedback/` contains global notifications and status overlays.
-- `forms/` contains shared form controls and modal forms.
-- `buttons/` contains shared action button styles.
-- `layout/` contains the application shell and sidebar.
-- `navigation/` contains pagination controls.
-- `routing/` contains protected-route behavior.
+```sh
+npm run lint
+npm test
+npm run build
+npm run preview
+```
 
-## User feedback
+`npm test` runs the frontend's Node-based unit tests. Browser E2E coverage is not configured yet. Run `npm run build` to validate the production bundle, and use the companion backend project's [testing and performance plan](../../back-end/leo/docs/testing/TESTING_AND_PERFORMANCE.md) for broader verification guidance when both repositories are available in the same workspace.
 
-Use `useFeedback` from a component inside the app to show notifications, save status, and confirmation dialogs:
+## Project layout
+
+Feature screens and styles live together under `src/features/`:
+
+- `auth/` — login, registration, and platform setup.
+- `dashboard/` — owner summary.
+- `finance/` — accounts, customers, debts, expenses, and stock use.
+- `inventory/`, `pos/`, `sales/`, `shops/`, and `staff/` — shop workflows.
+- `admin/` — platform owner account management.
+
+Shared forms, feedback, layout, navigation, branding, and route protection live under `src/components/`. API requests use `src/api/api.js`; authentication state uses `src/context/`.
+
+Paged transaction and inventory lists use `PaginationControls`. The sales ledger keeps client-side pagination and orders results newest-first across selected shops; shop outlets are also paginated.
+
+## Shared feedback
+
+Use `useFeedback` from a component inside the app to show notifications, acknowledgement dialogs, save status, and confirmation dialogs:
 
 ```jsx
 import { useFeedback } from './context/useFeedback';
@@ -54,19 +66,8 @@ function SaveButton() {
 }
 ```
 
-Notifications accept `success`, `error`, `warning`, or `info` types and disappear after six seconds by default. Use `notify({ type: 'error', message: 'Could not load data.' })` to show an error card. Use `confirm({ title, message, confirmLabel, cancelLabel, variant: 'danger' })` for confirmation; it returns a promise that resolves to `true` only when confirmed. A completed save dialog closes with its OK button, Escape, or a click outside it.
+Notifications accept `success`, `error`, `warning`, or `info` and disappear after six seconds by default. Use `notify` for routine feedback, `alert({ title, message })` when the user must acknowledge a notice, and `confirm({ title, message, confirmLabel, cancelLabel, variant: 'danger' })` for confirmation. `confirm` resolves to `true` only when confirmed. Acknowledgement dialogs stay open until OK is selected.
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+## Companion backend documentation
 
-Currently, two official plugins are available:
-
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
-
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+When the backend repository is available beside this frontend repository, see its [requirements](../../back-end/leo/docs/architecture/SRS_Document.md), [architecture](../../back-end/leo/docs/architecture/System_Design_and_Architecture.md), [API reference](../../back-end/leo/docs/api/API_REFERENCE.md), and [security guidance](../../back-end/leo/docs/security/SECURITY_AND_DATA_HANDLING.md).

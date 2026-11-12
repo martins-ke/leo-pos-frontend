@@ -27,11 +27,13 @@ export default function PosPage() {
   const [catalogPage, setCatalogPage] = useState(0);
   const [selectedCustomerId, setSelectedCustomerId] = useState('');
   const [selectedCustomerName, setSelectedCustomerName] = useState('');
+  const [selectedCustomerCreditEligible, setSelectedCustomerCreditEligible] = useState(false);
   const [customerPage, setCustomerPage] = useState(0);
   const [customerHasNext, setCustomerHasNext] = useState(false);
   const [cart, setCart] = useState([]);
   const [amountTendered, setAmountTendered] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('CASH');
+  const [recordAsDebt, setRecordAsDebt] = useState(false);
   const [lastSale, setLastSale] = useState(null);
   const [loading, setLoading] = useState(false);
   const [voiceEnabled, setVoiceEnabled] = useState(() => getVoiceFeatureFlag());
@@ -186,6 +188,7 @@ export default function PosPage() {
   const clearCart = () => {
     setCart([]);
     setAmountTendered('');
+    setRecordAsDebt(false);
   };
 
   const grandTotal = cart.reduce((sum, item) => sum + (parseFloat(item.selling_price || item.sellingPrice) * item.qty), 0);
@@ -200,13 +203,21 @@ export default function PosPage() {
     }
   };
 
-  const handleCheckout = async () => {
+  const handleCheckout = async (asDebt = false) => {
     if (cart.length === 0) {
       notify({ type: 'error', message: 'Please add products to cart before checkout.' });
       return;
     }
 
-    if (paymentMethod === 'CASH' && (!amountTendered || numericTendered < grandTotal)) {
+    if (asDebt && (!selectedCustomerId || !selectedCustomerCreditEligible)) {
+      notify({
+        type: 'error',
+        message: 'Select a customer approved for credit before recording this sale as a debt.',
+      });
+      return;
+    }
+
+    if (!asDebt && paymentMethod === 'CASH' && (!amountTendered || numericTendered < grandTotal)) {
       notify({
         type: 'error',
         message: `Insufficient cash tendered! Total due is KES ${grandTotal.toLocaleString()}`,
@@ -216,8 +227,8 @@ export default function PosPage() {
 
     setLoading(true);
     const saveStatus = beginSaving({ title: 'Processing sale' });
-    const tendered = paymentMethod === 'CASH' ? numericTendered : grandTotal;
-    const calculatedChange = paymentMethod === 'CASH' ? changeGiven : 0;
+    const tendered = asDebt ? 0 : paymentMethod === 'CASH' ? numericTendered : grandTotal;
+    const calculatedChange = !asDebt && paymentMethod === 'CASH' ? changeGiven : 0;
 
     const payload = {
       shopId: selectedShopId || (shops[0]?.id || null),
@@ -230,7 +241,7 @@ export default function PosPage() {
       grandTotal,
       amountTendered: tendered,
       changeGiven: calculatedChange,
-      paymentMethod,
+      paymentMethod: asDebt ? 'DEBT' : paymentMethod,
       customerId: selectedCustomerId || undefined,
     };
 
@@ -240,8 +251,9 @@ export default function PosPage() {
         setLastSale(res.body);
         setCart([]);
         setAmountTendered('');
+        setRecordAsDebt(false);
         saveStatus.complete({
-          title: 'Sale complete',
+          title: asDebt ? 'Debt sale recorded' : 'Sale complete',
           message: `Receipt #${res.body.receiptNumber || res.body.id}`,
         });
         // Refresh product stock
@@ -263,6 +275,9 @@ export default function PosPage() {
   };
 
   const handleVoiceCheckout = async (payload) => {
+    if (recordAsDebt) {
+      return { success: false, message: 'Turn off debt checkout to use voice checkout.' };
+    }
     if (cart.length === 0) {
       return { success: false, message: 'Cart is empty.' };
     }
@@ -394,6 +409,8 @@ export default function PosPage() {
               setCustomerPage(0);
               setSelectedCustomerId('');
               setSelectedCustomerName('');
+              setSelectedCustomerCreditEligible(false);
+              setRecordAsDebt(false);
             }}
             className={styles.shopSelect}
             ariaLabel="Select register outlet"
@@ -455,13 +472,17 @@ export default function PosPage() {
                 const customer = customers.find(item => String(item.id) === customerId);
                 setSelectedCustomerId(customerId);
                 setSelectedCustomerName(customer?.name || '');
+                setSelectedCustomerCreditEligible(Boolean(customer?.creditEligible));
               }}
               options={[
                 { value: '', label: 'Walk-in sale (no customer linked)' },
                 ...(selectedCustomerId && !customers.some(customer => String(customer.id) === selectedCustomerId)
                   ? [{ value: selectedCustomerId, label: selectedCustomerName }]
                   : []),
-                ...customers.map(customer => ({ value: customer.id, label: customer.name }))
+                ...customers.map(customer => ({
+                  value: customer.id,
+                  label: `${customer.name}${customer.creditEligible ? ' (credit approved)' : ''}`
+                }))
               ]}
             />
             <PaginationControls
@@ -607,7 +628,7 @@ export default function PosPage() {
           {/* Checkout Controls */}
           <div className={styles.checkoutFooter}>
             {/* Payment Method Selector */}
-            <div className={styles.methodSelector}>
+            {!recordAsDebt && <div className={styles.methodSelector}>
               <button
                 type="button"
                 className={`${styles.methodBtn} ${paymentMethod === 'CASH' ? styles.methodActive : ''}`}
@@ -638,10 +659,10 @@ export default function PosPage() {
                 <MdCreditCard size={18} />
                 <span>Card</span>
               </button>
-            </div>
+            </div>}
 
             {/* Cash Shortcuts (only shown when Cash method selected) */}
-            {paymentMethod === 'CASH' && (
+            {!recordAsDebt && paymentMethod === 'CASH' && (
               <div className={styles.cashPresets}>
                 <button type="button" onClick={() => handleQuickCash('EXACT')}>Exact</button>
                 <button type="button" onClick={() => handleQuickCash(50)}>KES 50</button>
@@ -658,7 +679,7 @@ export default function PosPage() {
                 <span className={styles.totalValue}>KES {grandTotal.toLocaleString()}</span>
               </div>
 
-              {paymentMethod === 'CASH' && (
+              {!recordAsDebt && paymentMethod === 'CASH' && (
                 <>
                   <div className={styles.tenderRow}>
                     <label>Amount Tendered:</label>
@@ -681,17 +702,47 @@ export default function PosPage() {
             </div>
 
             {/* Pay Button */}
-            <button
-              className={styles.checkoutBtn}
-              onClick={handleCheckout}
-              disabled={cart.length === 0 || loading}
-            >
-              {loading ? (
-                'Processing Transaction...'
-              ) : (
-                `Complete Sale (KES ${grandTotal.toLocaleString()})`
-              )}
-            </button>
+            {recordAsDebt ? (
+              <>
+                <div className={styles.debtCheckoutNotice}>
+                  This sale will be linked to {selectedCustomerName || 'the selected customer'} as an unpaid debt.
+                  {selectedCustomerCreditEligible ? '' : ' Select a credit-approved customer to continue.'}
+                </div>
+                <div className={styles.checkoutActions}>
+                  <button type="button" className={styles.debtCancelBtn} onClick={() => setRecordAsDebt(false)} disabled={loading}>
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    className={styles.checkoutBtn}
+                    onClick={() => handleCheckout(true)}
+                    disabled={cart.length === 0 || loading || !selectedCustomerId || !selectedCustomerCreditEligible}
+                  >
+                    {loading ? 'Recording debt...' : `Complete as debt (KES ${grandTotal.toLocaleString()})`}
+                  </button>
+                </div>
+              </>
+            ) : (
+              <div className={styles.checkoutActions}>
+                <button
+                  type="button"
+                  className={styles.checkoutBtn}
+                  onClick={() => handleCheckout(false)}
+                  disabled={cart.length === 0 || loading}
+                >
+                  {loading ? 'Processing Transaction...' : `Complete Sale (KES ${grandTotal.toLocaleString()})`}
+                </button>
+                <button
+                  type="button"
+                  className={styles.debtToggleBtn}
+                  onClick={() => setRecordAsDebt(true)}
+                  disabled={cart.length === 0 || loading}
+                  aria-pressed={false}
+                >
+                  Record as debt
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -701,7 +752,7 @@ export default function PosPage() {
         <div className={styles.receiptOverlay}>
           <div className={styles.receiptModal}>
             <div className={styles.modalHeader}>
-              <h3>Sale Completed Successfully!</h3>
+              <h3>{lastSale.paymentMethod === 'DEBT' ? 'Customer Debt Recorded' : 'Sale Completed Successfully!'}</h3>
               <button className={styles.closeBtn} onClick={() => setLastSale(null)}>
                 <MdClose size={20} />
               </button>
@@ -748,8 +799,14 @@ export default function PosPage() {
 
               <div className={styles.receiptTotals}>
                 <div className={styles.rRow}><strong>TOTAL:</strong> <strong>KES {lastSale.grandTotal?.toLocaleString()}</strong></div>
-                <div className={styles.rRow}><span>Paid ({lastSale.paymentMethod}):</span> <span>KES {lastSale.amountTendered?.toLocaleString()}</span></div>
-                <div className={styles.rRow}><span>Change:</span> <span>KES {lastSale.changeGiven?.toLocaleString()}</span></div>
+                {lastSale.paymentMethod === 'DEBT' ? (
+                  <div className={styles.rRow}><span>Amount owed:</span> <span>KES {Number(lastSale.grandTotal).toLocaleString()}</span></div>
+                ) : (
+                  <>
+                    <div className={styles.rRow}><span>Paid ({lastSale.paymentMethod}):</span> <span>KES {lastSale.amountTendered?.toLocaleString()}</span></div>
+                    <div className={styles.rRow}><span>Change:</span> <span>KES {lastSale.changeGiven?.toLocaleString()}</span></div>
+                  </>
+                )}
               </div>
 
               <div className={styles.receiptDivider}>================================</div>

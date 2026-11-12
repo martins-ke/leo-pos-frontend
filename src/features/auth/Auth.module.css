@@ -4,33 +4,58 @@
   align-items: center;
   justify-content: center;
   background: var(--bg-app);
-  padding: 20px 16px;
+  padding: var(--space-5) var(--space-4);
   transition: background-color 0.2s ease;
 }
 
 .card {
   background: var(--bg-card);
-  padding: 2rem;
+  padding: var(--space-8);
   border-radius: 2rem;
   width: 100%;
   max-width: 480px;
   box-shadow: var(--shadow-lg);
-  border: 1px solid var(--border-default);
+  border: var(--border-width) solid var(--border-default);
   transition: all 0.2s ease;
+}
+
+.registerCard {
+  max-width: var(--content-width-form);
+}
+
+.registerIntro {
+  margin-bottom: var(--space-3);
+}
+
+.registerLogin {
+  margin: var(--space-3) 0 0;
+  color: var(--text-muted);
+  font-size: var(--font-size-base);
+  text-align: center;
+}
+
+.registerLogin a {
+  color: var(--primary);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.registerLogin a:hover {
+  text-decoration: underline;
 }
 
 .brandRow {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-bottom: 16px;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
 }
 
 .brandIcon {
   width: 44px;
   height: 44px;
-  border-radius: 12px;
-  background: var(--brand-gradient);
+  border-radius: var(--radius-xl);
+  background: var(--brand-accent);
   color: var(--text-on-primary);
   display: flex;
   align-items: center;
@@ -38,6 +63,11 @@
   font-size: var(--font-size-5xl);
   font-weight: 800;
   box-shadow: var(--shadow-brand-glow);
+}
+
+.brandIcon svg {
+  width: 28px;
+  height: 28px;
 }
 
 .brand {
@@ -52,7 +82,7 @@
   color: var(--primary);
   font-weight: 700;
   text-transform: uppercase;
-  margin-left: 6px;
+  margin-left: var(--space-1-5);
   letter-spacing: 1px;
 }
 
@@ -60,32 +90,58 @@
   font-size: var(--font-size-4xl);
   font-weight: 800;
   color: var(--text-main);
-  margin: 0 0 4px;
+  margin: 0 0 var(--space-1);
 }
 
 .sub {
   color: var(--text-muted);
   font-size: var(--font-size-base);
-  margin-bottom: 22px;
+  margin-bottom: var(--space-5-5);
+}
+
+.saasOwnerPortal {
+  --portal-accent: #334155;
+  --portal-tint: #eef2f6;
+}
+
+.portalHeading {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2-5);
+  margin: var(--space-5) 0 0;
+  color: var(--text-main);
+  font-size: var(--font-size-4xl);
+  font-weight: 800;
+}
+
+.portalIcon {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: var(--radius-lg);
+  background: var(--portal-tint);
+  color: var(--portal-accent);
 }
 
 .form {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: var(--space-3-5);
 }
 
 .stepProgress {
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin: 0 0 20px;
+  gap: var(--space-2-5);
+  margin: 0 0 var(--space-5);
 }
 
 .stepIndicator {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-2);
   color: var(--text-muted);
   font-size: var(--font-size-sm);
   font-weight: 600;
@@ -97,7 +153,7 @@
   width: 26px;
   aspect-ratio: 1;
   place-items: center;
-  border: 1px solid var(--border-strong);
+  border: var(--border-width) solid var(--border-strong);
   border-radius: 50%;
   background: var(--bg-subtle);
 }
@@ -126,54 +182,28 @@
 .formStep {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: var(--space-3-5);
 }
 
-.rolePicker {
+.businessDetails {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 8px;
-  margin-bottom: 6px;
-}
-
-.rolePill {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  padding: 0.35rem;
-  border-radius: 0.45rem;
-  border: 1px solid var(--border-strong);
-  background: var(--bg-surface);
-  color: var(--text-secondary);
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.5s ease;
-}
-
-.rolePill span {
-  white-space: nowrap;
-}
-
-.roleActive {
-  background: var(--bg-item-active);
-  border-color: var(--primary);
-  color: var(--primary);
+  gap: var(--space-2);
 }
 
 .form label {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: var(--space-1-5);
   font-size: var(--font-size-label);
   font-weight: 600;
   color: var(--text-secondary);
 }
 
 .form input, .form select {
-  padding: 10px 14px;
-  border: 1px solid var(--border-strong);
-  border-radius: 8px;
+  padding: var(--space-2-5) var(--space-3-5);
+  border: var(--border-width) solid var(--border-strong);
+  border-radius: var(--radius-md);
   font-size: var(--font-size-base);
   background: var(--bg-input);
   color: var(--text-main);
@@ -189,20 +219,20 @@
   background: var(--primary-gradient);
   color: var(--text-on-primary);
   border: none;
-  padding: 12px;
-  border-radius: 8px;
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
   font-weight: 700;
   font-size: var(--font-size-lg);
   cursor: pointer;
-  margin-top: 6px;
+  margin-top: var(--space-1-5);
   box-shadow: var(--shadow-sm);
   transition: all 0.15s ease;
 }
 
 .formActions {
   display: flex;
-  gap: 10px;
-  margin-top: 6px;
+  gap: var(--space-2-5);
+  margin-top: var(--space-1-5);
 }
 
 .formActions .btn {
@@ -211,9 +241,9 @@
 }
 
 .backBtn {
-  padding: 12px 18px;
-  border: 1px solid var(--border-strong);
-  border-radius: 8px;
+  padding: var(--space-3) var(--space-4-5);
+  border: var(--border-width) solid var(--border-strong);
+  border-radius: var(--radius-md);
   background: var(--bg-surface);
   color: var(--text-secondary);
   font-size: var(--font-size-lg);
@@ -241,59 +271,42 @@
 .error {
   background: var(--danger-bg);
   color: var(--danger-text);
-  padding: 10px 12px;
-  border-radius: 8px;
+  padding: var(--space-2-5) var(--space-3);
+  border-radius: var(--radius-md);
   font-size: var(--font-size-md);
   font-weight: 500;
-  margin-bottom: 14px;
-  border: 1px solid var(--danger-border);
+  margin-bottom: var(--space-3-5);
+  border: var(--border-width) solid var(--danger-border);
 }
 
 .success {
   background: var(--success-bg);
   color: var(--success-text);
-  padding: 10px 12px;
-  border-radius: 8px;
+  padding: var(--space-2-5) var(--space-3);
+  border-radius: var(--radius-md);
   font-size: var(--font-size-md);
   font-weight: 600;
-  margin-bottom: 14px;
-  border: 1px solid var(--success-border);
+  margin-bottom: var(--space-3-5);
+  border: var(--border-width) solid var(--success-border);
   display: flex;
   align-items: center;
-  gap: 8px;
-}
-
-.foot {
-  text-align: center;
-  margin-top: 16px;
-  font-size: var(--font-size-base);
-  color: var(--text-muted);
-}
-
-.foot a {
-  color: var(--primary);
-  text-decoration: none;
-  font-weight: 600;
-}
-
-.foot a:hover {
-  text-decoration: underline;
+  gap: var(--space-2);
 }
 
 @media (max-width: 480px) {
   .page {
-    padding: 16px 12px;
+    padding: var(--space-4) var(--space-3);
   }
 
   .card {
-    padding: 24px 18px;
-    border-radius: 14px;
+    padding: var(--space-6) var(--space-4-5);
+    border-radius: var(--radius-xl-plus);
     max-width: 100%;
   }
 
   .brandRow {
-    gap: 10px;
-    margin-bottom: 12px;
+    gap: var(--space-2-5);
+    margin-bottom: var(--space-3);
   }
 
   .brandIcon {
@@ -311,17 +324,17 @@
   }
 
   .sub {
-    margin-bottom: 18px;
+    margin-bottom: var(--space-4-5);
     font-size: var(--font-size-sm);
   }
 
   .stepProgress {
-    gap: 6px;
+    gap: var(--space-1-5);
     align-items: flex-start;
   }
 
   .stepIndicator {
-    gap: 6px;
+    gap: var(--space-1-5);
     font-size: var(--font-size-xs);
     line-height: 1.2;
   }
@@ -330,13 +343,8 @@
     max-width: 80px;
   }
 
-  .rolePicker {
+  .businessDetails {
     grid-template-columns: 1fr;
-  }
-
-  .rolePill {
-    justify-content: flex-start;
-    padding: 10px 12px;
   }
 
   .form label {
@@ -345,7 +353,7 @@
 
   .form input,
   .form select {
-    padding: 11px 12px;
+    padding: var(--space-2-75) var(--space-3);
     font-size: var(--font-size-base);
   }
 
@@ -360,25 +368,22 @@
 
   .btn {
     min-height: 2.5rem;
-    padding: 0.25rem 0.45rem;
+    padding: var(--space-1) 0.45rem;
     font-size: var(--font-size-base);
   }
 
   .backBtn,
-  .rolePill {
+  .btn {
     min-height: 2.5rem;
-    padding: 0.25rem 0.45rem;
+    padding: var(--space-1) 0.45rem;
     font-size: var(--font-size-base);
   }
 
-  .foot {
-    font-size: var(--font-size-sm);
-  }
 }
 
 @media (max-width: 360px) {
   .card {
-    padding: 20px 14px;
+    padding: var(--space-5) var(--space-3-5);
   }
 
   .stepIndicator > span:last-child {

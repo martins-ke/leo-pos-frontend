@@ -1,13 +1,20 @@
 import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/useAuth';
 import { api } from '../../api/api';
+import LeoMark from '../../components/branding/LeoMark';
 import { useFeedback } from '../../context/useFeedback';
 import styles from './Auth.module.css';
 
+function getDestination(role) {
+  if (role === 'SUPER_ADMIN') return '/owner/admin/tenants';
+  if (role === 'OWNER') return '/owner/dashboard';
+  return '/client/pos';
+}
+
 export default function LoginPage() {
   const { login } = useAuth();
-  const { notify } = useFeedback();
+  const { alert, notify } = useFeedback();
   const navigate = useNavigate();
   const [form, setForm] = useState({ username: '', password: '' });
   const [loading, setLoading] = useState(false);
@@ -18,15 +25,26 @@ export default function LoginPage() {
     try {
       const res = await api.post('/auth/login', form);
       if (res.success && res.body) {
-        const userObj = res.body.user || res.body;
-        const token = res.body.token;
-        if (token) {
-          localStorage.setItem('leo_token', token);
+        const user = res.body.user || res.body;
+        if (res.body.token) {
+          localStorage.setItem('leo_token', res.body.token);
         }
-        login(userObj);
-        navigate(userObj.role === 'OWNER' ? '/dashboard' : '/pos');
+        login(user);
+        navigate(getDestination(user.role));
       } else {
-        notify({ type: 'error', message: res.message || 'Login failed' });
+        const message = res.message || 'Login failed';
+        if (/deactivat|inactive|suspend|pending owner approval/i.test(message)) {
+          alert({
+            title: /pending owner approval/i.test(message)
+              ? 'Account awaiting approval'
+              : /suspend/i.test(message)
+                ? 'Shop suspended'
+                : 'Account deactivated',
+            message,
+          });
+        } else {
+          notify({ type: 'error', message });
+        }
       }
     } catch {
       notify({ type: 'error', message: 'Could not connect to server. Check backend connection.' });
@@ -39,19 +57,20 @@ export default function LoginPage() {
     <div className={styles.page}>
       <div className={styles.card}>
         <div className={styles.brandRow}>
-          <div className={styles.brandIcon}>L</div>
-          <div className={styles.brand}>Leo <span>POS </span></div>
+          <div className={styles.brandIcon}><LeoMark /></div>
+          <div className={styles.brand}>Leo <span>POS</span></div>
         </div>
         <h2>Welcome back</h2>
-        <p className={styles.sub}>Login to your account below</p>
+        <p className={styles.sub}>Sign in to your Leo account.</p>
 
         <form onSubmit={handleSubmit} className={styles.form}>
-          <label>Username / Email
+          <label>Username or email
             <input
               type="text"
               value={form.username}
-              onChange={(e) => setForm({ ...form, username: e.target.value })}
-              placeholder="e.g. admin or staff"
+              onChange={e => setForm({ ...form, username: e.target.value })}
+              placeholder="Enter your username or email"
+              autoComplete="username"
               required
             />
           </label>
@@ -59,19 +78,16 @@ export default function LoginPage() {
             <input
               type="password"
               value={form.password}
-              onChange={(e) => setForm({ ...form, password: e.target.value })}
-              placeholder="••••••••"
+              onChange={e => setForm({ ...form, password: e.target.value })}
+              placeholder="Enter your password"
+              autoComplete="current-password"
               required
             />
           </label>
           <button type="submit" className={styles.btn} disabled={loading}>
-            {loading ? 'Signing in...' : 'Sign In'}
+            {loading ? 'Signing in...' : 'Log in'}
           </button>
         </form>
-
-        <p className={styles.foot}>
-          New business? <Link to="/register">Create an account</Link>
-        </p>
       </div>
     </div>
   );

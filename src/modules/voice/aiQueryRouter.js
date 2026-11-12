@@ -10,13 +10,6 @@ function formatMoney(value) {
   return `KES ${num.toLocaleString()}`;
 }
 
-function getDateKey(dateValue) {
-  if (!dateValue) return '';
-  const date = new Date(dateValue);
-  if (Number.isNaN(date.getTime())) return '';
-  return date.toISOString().split('T')[0];
-}
-
 function asDayName(dateValue) {
   const d = new Date(dateValue);
   return Number.isNaN(d.getTime()) ? '' : d.toLocaleDateString('en-US', { weekday: 'long' });

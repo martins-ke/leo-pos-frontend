@@ -23,7 +23,7 @@ const sortSalesNewestFirst = (items) => [...items].sort((a, b) => {
 });
 
 export default function SalesPage() {
-  const { notify } = useFeedback();
+  const { notify, confirm, beginSaving } = useFeedback();
   const [sales, setSales] = useState([]);
   const [shops, setShops] = useState([]);
   const [selectedShopId, setSelectedShopId] = useState('');
@@ -59,6 +59,28 @@ export default function SalesPage() {
       notify({ type: 'error', message: 'Could not connect to the server while loading sales.' });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const convertSaleToDebt = async (sale) => {
+    const confirmed = await confirm({
+      title: 'Convert paid sale to customer debt?',
+      message: `Receipt ${sale.receiptNumber || sale.id} for ${sale.customer?.name} will be removed from collected payments and added to that customer's outstanding debt.`,
+      confirmLabel: 'Convert to debt',
+    });
+    if (!confirmed) return;
+
+    const saveStatus = beginSaving({ title: 'Converting sale to debt' });
+    try {
+      const res = await api.post(`/debts/from-sale/${encodeURIComponent(sale.id)}`);
+      if (!res.success) {
+        saveStatus.fail({ message: res.message || 'Could not convert the sale to a debt.' });
+        return;
+      }
+      saveStatus.complete({ message: `Receipt ${sale.receiptNumber || sale.id} is now recorded as a customer debt.` });
+      loadSales();
+    } catch {
+      saveStatus.fail({ message: 'Could not connect to the server while converting the sale to debt.' });
     }
   };
 
@@ -182,9 +204,9 @@ export default function SalesPage() {
             <MdReceipt size={24} />
           </div>
           <div className={`${styles.kpiContent} ${pageStyles.salesKpiContent}`}>
-            <span className={`${styles.cardLabel} ${pageStyles.salesKpiLabel}`}>Orders Settled</span>
+            <span className={`${styles.cardLabel} ${pageStyles.salesKpiLabel}`}>Sales Recorded</span>
             <div className={`${styles.cardVal} ${pageStyles.salesKpiValue}`}>{totalOrders} Receipts</div>
-            <span className={styles.kpiSub}>Completed transactions</span>
+            <span className={styles.kpiSub}>Includes sales recorded as customer debt</span>
           </div>
         </div>
 
@@ -299,6 +321,16 @@ export default function SalesPage() {
                       >
                         <MdReceipt size={14} /> Receipt
                       </button>
+                      {s.customer?.creditEligible && s.paymentMethod !== 'DEBT' && (
+                        <button
+                          className={styles.viewRowBtn}
+                          onClick={() => convertSaleToDebt(s)}
+                          title="Move this paid sale to the customer's debt ledger"
+                          style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', marginLeft: '0.375rem' }}
+                        >
+                          Convert to debt
+                        </button>
+                      )}
                     </td>
                   </tr>
                 ))
@@ -375,14 +407,23 @@ export default function SalesPage() {
                   <span>TOTAL:</span>
                   <span>KES {Number(activeReceipt.grandTotal).toLocaleString()}</span>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span>Paid ({activeReceipt.paymentMethod}):</span>
-                  <span>KES {Number(activeReceipt.amountTendered).toLocaleString()}</span>
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span>Change:</span>
-                  <span>KES {Number(activeReceipt.changeGiven || 0).toLocaleString()}</span>
-                </div>
+                {activeReceipt.paymentMethod === 'DEBT' ? (
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span>Amount owed:</span>
+                    <span>KES {Number(activeReceipt.grandTotal).toLocaleString()}</span>
+                  </div>
+                ) : (
+                  <>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <span>Paid ({activeReceipt.paymentMethod}):</span>
+                      <span>KES {Number(activeReceipt.amountTendered).toLocaleString()}</span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <span>Change:</span>
+                      <span>KES {Number(activeReceipt.changeGiven || 0).toLocaleString()}</span>
+                    </div>
+                  </>
+                )}
               </div>
 
               <div style={{ letterSpacing: '-1px', color: 'var(--border-strong)', margin: '6px 0' }}>================================</div>

@@ -14,6 +14,7 @@ export default function ExpensesPage() {
   const [shopId, setShopId] = useState('');
   const [categories, setCategories] = useState([]);
   const [expenses, setExpenses] = useState([]);
+  const [todayExpenseTotal, setTodayExpenseTotal] = useState(0);
   const [page, setPage] = useState(0);
   const [hasNext, setHasNext] = useState(false);
   const [wizardOpen, setWizardOpen] = useState(false);
@@ -35,8 +36,9 @@ export default function ExpensesPage() {
     if (!shopId) return;
     Promise.all([
       api.get(`/expenses?shopId=${encodeURIComponent(shopId)}&page=${page}&size=50`),
-      api.get(`/expenses/categories?shopId=${encodeURIComponent(shopId)}`)
-    ]).then(([expenseRes, categoryRes]) => {
+      api.get(`/expenses/categories?shopId=${encodeURIComponent(shopId)}`),
+      api.get(`/expenses/daily-summary?shopId=${encodeURIComponent(shopId)}`)
+    ]).then(([expenseRes, categoryRes, dailyRes]) => {
       if (expenseRes.success && expenseRes.body) {
         setExpenses(expenseRes.body.content || []);
         setHasNext(expenseRes.body.last === false);
@@ -47,6 +49,8 @@ export default function ExpensesPage() {
       }
       if (categoryRes.success) setCategories(categoryRes.body || []);
       else notify({ type: 'error', message: categoryRes.message || 'Could not load expense categories.' });
+      if (dailyRes.success) setTodayExpenseTotal(Number(dailyRes.body || 0));
+      else notify({ type: 'error', message: dailyRes.message || "Could not load today's expense total." });
     }).catch(() => notify({ type: 'error', message: 'Could not load expenses.' }));
   }, [page, shopId]);
 
@@ -97,9 +101,15 @@ export default function ExpensesPage() {
           className={styles.shopSelect} ariaLabel="Select shop"
           options={shops.map(shop => ({ value: shop.id, label: shop.name }))} />
       </header>
+      <div className={styles.summaryGrid}>
+        <article className={styles.summaryCard}>
+          <span className={styles.summaryLabel}>Expenses today</span>
+          <strong className={styles.summaryValue}>KES {todayExpenseTotal.toLocaleString()}</strong>
+        </article>
+      </div>
       <section className={styles.panel}>
         <div className={styles.toolbar}>
-          <h2>Expense history</h2>
+          <div><h2>Expense history</h2><span className={styles.selectHint}>Today's total above; browse previous records below.</span></div>
           <div className={styles.actions}>
             <button type="button" className={styles.secondaryButton} onClick={createCategory} disabled={!shopId}>
               Add category

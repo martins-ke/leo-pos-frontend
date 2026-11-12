@@ -1,11 +1,9 @@
-const BASE_URL = import.meta.env.VITE_API_BASE_URL !== undefined 
-  ? import.meta.env.VITE_API_BASE_URL 
-  : 'http://localhost:8181';
+const BASE_URL = import.meta.env?.VITE_API_BASE_URL ?? 'http://localhost:8181';
 
-const getHeaders = () => {
+const getHeaders = ()=> { 
   const token = localStorage.getItem('leo_token');
-  return {
-    'Content-Type': 'application/json',
+  return { 
+    'Content-Type': 'application/json', 
     ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
   };
 };

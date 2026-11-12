@@ -2,8 +2,7 @@ import { useEffect, useState } from 'react';
 import { api } from '../../api/api';
 import { useNavigate } from 'react-router-dom';
 import {
-  MdTrendingUp, MdStore, MdInventory, MdWarning,
-  MdReceipt, MdArrowForward, MdPointOfSale, MdCheckCircle, MdPrint, MdClose
+  MdTrendingUp, MdStore, MdArrowForward, MdPointOfSale, MdCheckCircle, MdPrint, MdClose
 } from 'react-icons/md';
 import ExpandingSelect from '../../components/forms/ExpandingSelect';
 import { useFeedback } from '../../context/useFeedback';
@@ -17,6 +16,12 @@ export default function DashboardPage() {
     todayGrossProfit: 0,
     monthRevenue: 0,
     monthGrossProfit: 0,
+    todayCashCollected: 0,
+    todayMpesaCollected: 0,
+    todayCardCollected: 0,
+    todayBankTransferCollected: 0,
+    todayNetProfit: 0,
+    monthNetProfit: 0,
     totalSalesToday: 0,
     totalProducts: 0,
     lowStockCount: 0,
@@ -60,6 +65,13 @@ export default function DashboardPage() {
     fetchDashboardData();
   }, [selectedShopId]);
 
+  const todayCollected = [
+    data.todayCashCollected,
+    data.todayMpesaCollected,
+    data.todayCardCollected,
+    data.todayBankTransferCollected,
+  ].reduce((total, amount) => total + Number(amount || 0), 0);
+
   return (
     <div className={styles.container}>
       {/* Header with Title and Outlet Filter */}
@@ -82,7 +94,7 @@ export default function DashboardPage() {
             ]}
           />
 
-          <button className={styles.launchPosBtn} onClick={() => navigate('/pos')}>
+          <button className={styles.launchPosBtn} onClick={() => navigate('/owner/pos')}>
             <MdPointOfSale size={18} />
             <span>Open POS Counter</span>
           </button>
@@ -97,48 +109,55 @@ export default function DashboardPage() {
             <MdTrendingUp size={24} />
           </div>
           <div className={styles.kpiContent}>
-            <span className={styles.cardLabel}>Today's Revenue</span>
-            <div className={styles.cardVal}>Ksh <strong>{Number(data.todayRevenue || 0).toLocaleString()}</strong></div>
-            <span className={styles.kpiSub}>Gross profit: Ksh <span>{Number(data.todayGrossProfit || 0).toLocaleString()}</span></span>
-            <span className={styles.kpiSub}>Live transactions today</span>
+            <span className={styles.cardLabel}>Revenue &amp; Gross Profit</span>
+            <div className={styles.metricPeriod}>
+              <span className={styles.kpiSub}>Today</span>
+              <div className={styles.cardVal}>KES <strong>{Number(data.todayRevenue || 0).toLocaleString()}</strong></div>
+              <span className={styles.kpiSub}>Gross profit: <strong>KES {Number(data.todayGrossProfit || 0).toLocaleString()}</strong></span>
+            </div>
+            <div className={styles.metricPeriod}>
+              <span className={styles.kpiSub}>This month</span>
+              <div className={styles.cardVal}>KES <strong>{Number(data.monthRevenue || 0).toLocaleString()}</strong></div>
+              <span className={styles.kpiSub}>Gross profit: <strong>KES {Number(data.monthGrossProfit || 0).toLocaleString()}</strong></span>
+            </div>
           </div>
         </div>
 
         <div className={styles.kpiCard}>
           <div className={styles.cardIcon} style={{ background: 'var(--success-bg)', color: 'var(--success-text)' }}>
-            <MdReceipt size={24} />
+            <MdPointOfSale size={24} />
           </div>
           <div className={styles.kpiContent}>
-            <span className={styles.cardLabel}>Month-to-Date Revenue</span>
-            <div className={styles.cardVal}>Ksh <strong>{Number(data.monthRevenue || 0).toLocaleString()}</strong></div>
-            <span className={styles.kpiSub}>Gross profit: Ksh <span>{Number(data.monthGrossProfit || 0).toLocaleString()}</span></span>
-            <span className={styles.kpiSub}>Current month turnover</span>
+            <span className={styles.cardLabel}>Actual collected today</span>
+            <div className={styles.cardVal}>KES <strong>{todayCollected.toLocaleString()}</strong></div>
+            <div className={styles.collectionBreakdown}>
+              <span>Cash <strong>KES {Number(data.todayCashCollected || 0).toLocaleString()}</strong></span>
+              <span>M-Pesa <strong>KES {Number(data.todayMpesaCollected || 0).toLocaleString()}</strong></span>
+              <span>Card <strong>KES {Number(data.todayCardCollected || 0).toLocaleString()}</strong></span>
+              {Number(data.todayBankTransferCollected || 0) > 0 && (
+                <span>Bank transfer <strong>KES {Number(data.todayBankTransferCollected || 0).toLocaleString()}</strong></span>
+              )}
+            </div>
           </div>
         </div>
 
         <div className={styles.kpiCard}>
           <div className={styles.cardIcon} style={{ background: 'var(--warning-bg)', color: 'var(--warning-text)' }}>
-            <MdInventory size={24} />
+            <MdCheckCircle size={24} />
           </div>
           <div className={styles.kpiContent}>
-            <span className={styles.cardLabel}>Catalog Inventory</span>
-            <div className={styles.cardVal}>{data.totalProducts || 0} Items</div>
-            <span className={styles.kpiSub}>Active products registered</span>
+            <span className={styles.cardLabel}>Net Profit</span>
+            <div className={styles.metricPeriod}>
+              <span className={styles.kpiSub}>Today</span>
+              <div className={styles.cardVal}>KES <strong>{Number(data.todayNetProfit || 0).toLocaleString()}</strong></div>
+            </div>
+            <div className={styles.metricPeriod}>
+              <span className={styles.kpiSub}>This month</span>
+              <div className={styles.cardVal}>KES <strong>{Number(data.monthNetProfit || 0).toLocaleString()}</strong></div>
+            </div>
           </div>
         </div>
 
-        {data.lowStockCount > 0 && (<div className={`${styles.kpiCard} ${data.lowStockCount > 0 ? styles.kpiCardWarning : ''}`}>
-          <div className={styles.cardIcon} style={{ background: 'var(--danger-bg)', color: 'var(--danger-text)' }}>
-            <MdWarning size={24} />
-          </div>
-          <div className={styles.kpiContent}>
-            <span className={styles.cardLabel}>Low Stock Alerts</span>
-            <div className={styles.cardVal} style={{ color: data.lowStockCount > 0 ? 'var(--danger-text)' : 'inherit' }}>
-              {data.lowStockCount || 0} Item{data.lowStockCount !== 1 ? 's' : ''}
-            </div>
-            <span className={styles.kpiSub}>Items near depletion</span>
-          </div>
-        </div>)}
       </div>
 
       {/* Main Split Section: Recent Transactions + Low Stock Radar */}

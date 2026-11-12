@@ -33,7 +33,7 @@ export default function ShopAssignmentModal({ staffId, staffName, onClose, onUpd
         } else {
           notify({ type: 'error', message: staffRes.message || 'Failed to load staff data.' });
         }
-      } catch (e) {
+      } catch {
         notify({ type: 'error', message: 'Network error while loading shops.' });
       } finally {
         setLoading(false);
@@ -68,7 +68,7 @@ export default function ShopAssignmentModal({ staffId, staffName, onClose, onUpd
       }
       saveStatus.complete({ message: `Shop assignments updated for ${staffName}` });
       onUpdated();
-    } catch (e) {
+    } catch {
       saveStatus.fail({ message: 'Failed to update assignments.' });
     }
   };

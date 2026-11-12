@@ -183,7 +183,7 @@ class SpeechEngine {
       this.recognition.start();
       this.isListening = true;
       return true;
-    } catch (e) {
+    } catch {
       return false;
     }
   }

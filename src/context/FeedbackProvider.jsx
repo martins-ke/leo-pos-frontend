@@ -69,6 +69,21 @@ export function FeedbackProvider({ children }) {
     });
   }), [replaceDialog]);
 
+  const alert = useCallback((options) => {
+    if (!options || (options.message == null && options.title == null)) {
+      throw new TypeError('alert requires a message or title');
+    }
+
+    replaceDialog({
+      kind: 'alert',
+      id: ++nextId.current,
+      phase: 'error',
+      title: options.title ?? 'Important notice',
+      message: options.message ?? '',
+      okLabel: options.okLabel ?? 'OK',
+    });
+  }, [replaceDialog]);
+
   const beginSaving = useCallback((options = {}) => {
     const id = ++nextId.current;
     replaceDialog({
@@ -110,7 +125,7 @@ export function FeedbackProvider({ children }) {
     if (dialogRef.current?.kind === 'confirm') dialogRef.current.resolve(false);
   }, []);
 
-  const value = { notify, confirm, beginSaving };
+  const value = { notify, alert, confirm, beginSaving };
 
   return (
     <FeedbackContext.Provider value={value}>

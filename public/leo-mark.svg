@@ -1,6 +1,27 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" fill="none">
-  <rect width="40" height="40" rx="12" fill="#ED7447"/>
-  <rect x="7" y="11" width="26" height="23" rx="5" stroke="#FFFAF2" stroke-width="2.2"/>
-  <path d="M7 17h26M14 8v7M26 8v7" stroke="#FFFAF2" stroke-width="2.2" stroke-linecap="round"/>
-  <path d="M14 27a6 6 0 0 1 12 0M12 28h16" stroke="#FFFAF2" stroke-width="2.2" stroke-linecap="round"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" fill="none">
+  <defs>
+    <linearGradient id="leoPillarBlue" x1="12" y1="6" x2="22" y2="38" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#fff"/>
+      <stop offset="60%" stop-color="#e0f2fe"/>
+      <stop offset="100%" stop-color="#bae6fd"/>
+    </linearGradient>
+    <linearGradient id="leoBaseBlue" x1="14" y1="32" x2="41" y2="38" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#fff"/>
+      <stop offset="100%" stop-color="#7dd3fc"/>
+    </linearGradient>
+    <linearGradient id="leoDotCyan" x1="29" y1="7" x2="39" y2="17" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#e0f2fe"/>
+      <stop offset="50%" stop-color="#38bdf8"/>
+      <stop offset="100%" stop-color="#00d2ff"/>
+    </linearGradient>
+    <filter id="leoDotGlow" x="25" y="3" width="20" height="20" filterUnits="userSpaceOnUse">
+      <feGaussianBlur stdDeviation="1.5" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+  </defs>
+  <rect width="48" height="48" rx="14" fill="#ff6a00"/>
+  <path d="M12 8c0-1.105.895-2 2-2h6c1.105 0 2 .895 2 2v24h-8c-1.105 0-2-.895-2-2V8Z" fill="url(#leoPillarBlue)"/>
+  <path d="M14 32h24a3 3 0 0 1 0 6H14a4 4 0 0 1-4-4v-2h4Z" fill="url(#leoBaseBlue)"/>
+  <path d="m22 23 13 9H22v-9Z" fill="#38bdf8" opacity=".95"/>
+  <circle cx="34" cy="12" r="4.25" fill="url(#leoDotCyan)" filter="url(#leoDotGlow)"/>
 </svg>

@@ -168,7 +168,7 @@ export default function DebtsPage() {
   return (
     <div className={styles.page}>
       <header className={styles.header}>
-        <div><h1>Customer Debts</h1><p>Debt is an independent customer record and never changes sales.</p></div>
+        <div><h1>Customer Debts</h1><p>Manage manually recorded debts and balances linked to POS sales.</p></div>
         <ExpandingSelect value={shopId} onChange={value => {
           setShopId(value);
           setPage(0);
@@ -202,7 +202,7 @@ export default function DebtsPage() {
         </div>
         <div className={styles.tableWrap}>
           <table className={styles.table}>
-            <thead><tr><th>Customer</th><th>Recorded</th><th>Due</th><th>Principal</th><th>Outstanding</th><th>Recorded by</th><th>Repayment</th><th>Action</th></tr></thead>
+            <thead><tr><th>Customer</th><th>Recorded</th><th>Due</th><th>Debt Amount</th><th>Outstanding</th><th>Recorded by</th><th>Repayment</th><th>Action</th></tr></thead>
             <tbody>
               {debts.map(debt => (
                 <tr key={debt.id}>

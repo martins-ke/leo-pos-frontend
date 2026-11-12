@@ -1,14 +1,14 @@
 .container {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: var(--space-5);
 }
 
 .headerRow {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
+  gap: var(--space-4);
   flex-wrap: wrap;
 }
 
@@ -23,7 +23,7 @@
 .headerRow p {
   color: var(--text-muted);
   font-size: var(--font-size-base);
-  margin-top: 4px;
+  margin-top: var(--space-1);
 }
 
 @media (max-width: 300px){
@@ -46,18 +46,18 @@
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  gap: 1rem;
+  gap: var(--space-4);
   flex-wrap: wrap;
 }
 
 .outletFilter {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-2);
   background: var(--bg-card);
-  border: 1px solid var(--border-default);
-  border-radius: 8px;
-  padding: 6px 12px;
+  border: var(--border-width) solid var(--border-default);
+  border-radius: var(--radius-md);
+  padding: var(--space-1-5) var(--space-3);
   box-shadow: var(--shadow-sm);
 }
 
@@ -69,7 +69,7 @@
 
 .outletSelect > div > button {
   min-height: 2.25rem;
-  padding: 0.25rem 0.5rem;
+  padding: var(--space-1) var(--space-2);
   font-weight: 600;
   color: var(--accent-blue);
 }
@@ -82,13 +82,13 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
+  gap: var(--space-2);
   min-height: 2.75rem;
   background: var(--primary-gradient);
   color: var(--text-on-primary);
   border: none;
-  padding: 0.5rem 0.75rem;
-  border-radius: 0.45rem;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-control);
   font-weight: 600;
   cursor: pointer;
   box-shadow: var(--shadow-sm);
@@ -105,17 +105,17 @@
 .kpiGrid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 1rem;
+  gap: var(--space-4);
 }
 
 .kpiCard {
   background: var(--bg-card);
-  padding: 0.5rem;
-  border-radius: 0.5rem;
+  padding: var(--space-2);
+  border-radius: var(--radius-md);
   display: flex;
   align-items: center;
   gap: 0.7rem;
-  border: 1px solid var(--border-default);
+  border: var(--border-width) solid var(--border-default);
   box-shadow: var(--shadow-sm);
   transition: transform 0.15s, box-shadow 0.15s;
 }
@@ -133,7 +133,7 @@
 .cardIcon {
   width: 48px;
   height: 48px;
-  border-radius: 12px;
+  border-radius: var(--radius-xl);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -142,7 +142,9 @@
 
 .kpiContent {
   display: flex;
+  flex: 1;
   flex-direction: column;
+  min-width: 0;
 }
 
 .cardLabel {
@@ -154,10 +156,10 @@
 }
 
 .cardVal {
-  font-size: 1.125rem;
+  font-size: var(--font-size-heading-sm);
   font-weight: 600;
   color: var(--text-main);
-  margin: 0.25rem 0;
+  margin: var(--space-1) 0;
   line-height: 1.2;
 }
 
@@ -175,11 +177,44 @@
   color: var(--info-text);
 }
 
+.metricPeriod {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  padding-top: 0.4rem;
+  margin-top: 0.35rem;
+  border-top: var(--border-width) solid var(--border-default);
+}
+
+.metricPeriod .cardVal {
+  margin: 0;
+}
+
+.metricPeriod .kpiSub strong,
+.collectionBreakdown strong {
+  color: var(--info-text);
+  font-weight: 700;
+}
+
+.collectionBreakdown {
+  display: grid;
+  gap: 0.35rem;
+  margin-top: var(--space-1);
+  color: var(--text-muted);
+  font-size: var(--font-size-sm);
+}
+
+.collectionBreakdown span {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
 /* Split Section Layout */
 .splitGrid {
   display: grid;
   grid-template-columns: 1.6fr 1fr;
-  gap: 18px;
+  gap: var(--space-4-5);
 }
 
 @media (max-width: 1024px) {
@@ -190,9 +225,9 @@
 
 .sectionCard {
   background: var(--bg-card);
-  border-radius: 0.75rem;
-  border: 1px solid var(--border-default);
-  padding: 1rem;
+  border-radius: var(--radius-xl);
+  border: var(--border-width) solid var(--border-default);
+  padding: var(--space-4);
   box-shadow: var(--shadow-sm);
   display: flex;
   overflow: auto;
@@ -203,10 +238,10 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 1rem;
+  margin-bottom: var(--space-4);
   padding-bottom: 0.65rem;
   flex-wrap: wrap;
-  border-bottom: 1px solid var(--border-subtle);
+  border-bottom: var(--border-width) solid var(--border-subtle);
 }
 
 .sectionHeader h2 {
@@ -229,7 +264,7 @@
   font-weight: 600;
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: var(--space-1);
   cursor: pointer;
 }
 
@@ -250,21 +285,21 @@
 
 .table th {
   background: var(--bg-subtle);
-  padding: 0.6rem 0.75rem;
+  padding: 0.6rem var(--space-3);
   font-size: var(--font-size-md);
   font-weight: 700;
   color: var(--text-secondary);
   text-align: left;
-  border-bottom: 1px solid var(--border-default);
+  border-bottom: var(--border-width) solid var(--border-default);
   white-space: nowrap;
   color: var(--th-color);
 }
 
 .table td {
-  padding: 0.5rem;
+  padding: var(--space-2);
   font-size: var(--font-size-base);
   color: var(--text-secondary);
-  border-bottom: 1px solid var(--border-subtle);
+  border-bottom: var(--border-width) solid var(--border-subtle);
   vertical-align: middle;
   white-space: nowrap;
 }
@@ -280,15 +315,15 @@
 }
 
 .amountBadge {
-  font-size: 1rem;
+  font-size: var(--font-size-body-lg);
   font-weight: 700;
   color: var(--text-main);
 }
 
 .methodPill {
   display: inline-block;
-  padding: 2px 8px;
-  border-radius: 4px;
+  padding: 2px var(--space-2);
+  border-radius: var(--radius-xs);
   font-size: var(--font-size-xs);
   font-weight: 700;
   text-transform: uppercase;
@@ -316,12 +351,12 @@
 
 .viewRowBtn {
   background: var(--bg-subtle);
-  border: 1px solid var(--border-default);
+  border: var(--border-width) solid var(--border-default);
   color: var(--text-secondary);
   font-size: var(--font-size-sm);
   font-weight: 600;
-  padding: 4px 8px;
-  border-radius: 4px;
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-xs);
   cursor: pointer;
   transition: all 0.15s ease;
 }
@@ -333,7 +368,7 @@
 
 .emptyTable {
   text-align: center;
-  padding: 36px 12px;
+  padding: var(--space-9) var(--space-3);
   color: var(--text-placeholder);
   font-size: var(--font-size-base);
 }
@@ -342,7 +377,7 @@
 .lowStockList {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: var(--space-2-5);
   flex: 1;
 }
 
@@ -352,7 +387,7 @@
   align-items: center;
   justify-content: center;
   text-align: center;
-  padding: 36px 12px;
+  padding: var(--space-9) var(--space-3);
   color: var(--text-muted);
 }
 
@@ -360,7 +395,7 @@
   font-size: var(--font-size-base);
   font-weight: 700;
   color: var(--text-main);
-  margin: 8px 0 2px;
+  margin: var(--space-2) 0 2px;
 }
 
 .healthyStockState span {
@@ -372,10 +407,10 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 10px 12px;
-  border-radius: 8px;
+  padding: var(--space-2-5) var(--space-3);
+  border-radius: var(--radius-md);
   background: var(--danger-bg);
-  border: 1px solid var(--danger-border);
+  border: var(--border-width) solid var(--danger-border);
 }
 
 .stockItemMeta {
@@ -397,7 +432,7 @@
 .stockItemRight {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-2);
 }
 
 .stockQtyPill {
@@ -411,10 +446,10 @@
 
 .quickRestockBtn {
   background: var(--bg-surface);
-  border: 1px solid var(--danger-border);
+  border: var(--border-width) solid var(--danger-border);
   color: var(--danger-text);
-  padding: 4px 8px;
-  border-radius: 4px;
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-xs);
   font-size: var(--font-size-sm);
   font-weight: 700;
   cursor: pointer;
@@ -434,14 +469,14 @@
   align-items: center;
   justify-content: center;
   z-index: 500;
-  padding: 16px;
+  padding: var(--space-4);
 }
 
 .modalContent {
   background: var(--bg-card);
-  border-radius: 12px;
-  border: 1px solid var(--border-default);
-  padding: 24px;
+  border-radius: var(--radius-xl);
+  border: var(--border-width) solid var(--border-default);
+  padding: var(--space-6);
   width: 100%;
   max-width: 440px;
   box-shadow: var(--shadow-lg);
@@ -453,7 +488,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 16px;
+  margin-bottom: var(--space-4);
 }
 
 .modalHeader h3 {
@@ -473,12 +508,12 @@
 .printBtn {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--space-1-5);
   background: var(--primary);
   color: var(--text-on-primary);
   border: none;
-  padding: 8px 14px;
-  border-radius: 6px;
+  padding: var(--space-2) var(--space-3-5);
+  border-radius: var(--radius-sm-plus);
   font-size: var(--font-size-md);
   font-weight: 600;
   cursor: pointer;
@@ -486,10 +521,10 @@
 
 .closeModalBtn {
   background: var(--bg-subtle);
-  border: 1px solid var(--border-default);
+  border: var(--border-width) solid var(--border-default);
   color: var(--text-secondary);
-  padding: 8px 14px;
-  border-radius: 6px;
+  padding: var(--space-2) var(--space-3-5);
+  border-radius: var(--radius-sm-plus);
   font-size: var(--font-size-md);
   font-weight: 600;
   cursor: pointer;
@@ -522,11 +557,11 @@
 
 @media (max-width: 640px) {
   .mobilePage {
-    gap: 0.875rem;
+    gap: var(--space-3-5);
   }
 
   .mobilePage .headerRow {
-    gap: 0.625rem;
+    gap: var(--space-2-5);
   }
 
   .mobilePage .headerRow h1 {
@@ -540,32 +575,32 @@
   }
 
   .mobilePage .headerActions {
-    gap: 0.625rem;
+    gap: var(--space-2-5);
   }
 
   .mobilePage .launchPosBtn {
     min-height: 2.5rem;
-    padding: 0.25rem 0.625rem;
+    padding: var(--space-1) var(--space-2-5);
     font-size: var(--font-size-base);
   }
 
   .mobilePage .kpiGrid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 0.625rem;
+    gap: var(--space-2-5);
   }
 
   .mobilePage .kpiCard {
     min-width: 0;
     align-items: flex-start;
-    gap: 0.5rem;
-    padding: 0.75rem;
-    border-radius: 0.625rem;
+    gap: var(--space-2);
+    padding: var(--space-3);
+    border-radius: var(--radius-lg);
   }
 
   .mobilePage .cardIcon {
     width: 2rem;
     height: 2rem;
-    border-radius: 0.625rem;
+    border-radius: var(--radius-lg);
   }
 
   .mobilePage .cardIcon > svg {
@@ -586,7 +621,7 @@
   .mobilePage .cardVal {
     line-height: 1.25;
     white-space: nowrap;
-    font-size: 1rem;
+    font-size: var(--font-size-body-lg);
   }
 
   .mobilePage .kpiSub {
@@ -595,15 +630,15 @@
 
   .mobilePage .sectionCard {
     min-width: 0;
-    padding: 0.75rem;
-    border-radius: 0.625rem;
+    padding: var(--space-3);
+    border-radius: var(--radius-lg);
   }
 
   .mobilePage .sectionHeader {
     align-items: flex-start;
-    gap: 0.5rem;
-    margin-bottom: 0.75rem;
-    padding-bottom: 0.5rem;
+    gap: var(--space-2);
+    margin-bottom: var(--space-3);
+    padding-bottom: var(--space-2);
   }
 
   .mobilePage .sectionHeader h2 {
@@ -627,32 +662,32 @@
 
   .mobilePage .table th,
   .mobilePage .table td {
-    padding: 0.5rem 0.625rem;
+    padding: var(--space-2) var(--space-2-5);
     font-size: var(--font-size-sm);
   }
 
   .mobilePage .viewRowBtn,
   .mobilePage .quickRestockBtn {
     min-height: 2.25rem;
-    padding: 0.25rem 0.4rem;
+    padding: var(--space-1) 0.4rem;
     font-size: var(--font-size-base);
   }
 
   .mobilePage .modalContent button {
     min-height: 2.5rem;
-    padding: 0.25rem 0.45rem;
+    padding: var(--space-1) 0.45rem;
     font-size: var(--font-size-base);
   }
 
   .mobilePage .modalContent {
     max-height: 90dvh;
-    padding: 1rem;
+    padding: var(--space-4);
   }
 }
 
 @media (max-width: 360px) {
   .mobilePage .kpiCard {
-    padding: 0.625rem;
+    padding: var(--space-2-5);
   }
 
   .mobilePage .cardIcon {

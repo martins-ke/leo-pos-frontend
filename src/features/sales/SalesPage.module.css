@@ -17,14 +17,14 @@
 @media (max-width: 480px) {
   .salesKpiGrid.salesKpiGrid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 0.625rem;
+    gap: var(--space-2-5);
   }
 
   .salesKpiCard.salesKpiCard {
     min-height: 5.5rem;
     align-items: center;
-    gap: 0.5rem;
-    padding: 0.625rem;
+    gap: var(--space-2);
+    padding: var(--space-2-5);
   }
 
   .salesKpiCard .salesKpiIcon {
@@ -45,7 +45,7 @@
   }
 
   .salesKpiCard .salesMoneyValue {
-    font-size: clamp(0.75rem, 3.8vw, 0.875rem);
+    font-size: clamp(var(--font-size-small), 3.8vw, var(--font-size-body));
     overflow-wrap: normal;
   }
 }

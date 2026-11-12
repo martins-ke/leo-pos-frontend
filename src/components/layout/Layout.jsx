@@ -2,12 +2,13 @@ import { useState } from 'react';
 import { Outlet } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import { useTheme } from '../../context/useTheme';
+import LeoMark from '../branding/LeoMark';
 import {
   MdCalendarToday, MdMenu, MdLightMode, MdDarkMode
 } from 'react-icons/md';
 import styles from './Layout.module.css';
 
-export default function Layout() {
+export default function Layout({ variant = 'owner' }) {
   const { theme, toggleTheme } = useTheme();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -21,6 +22,7 @@ export default function Layout() {
   return (
     <div className={styles.layout}>
       <Sidebar
+        variant={variant}
         isOpen={mobileMenuOpen}
         onCloseMobile={() => setMobileMenuOpen(false)}
       />
@@ -35,6 +37,16 @@ export default function Layout() {
             >
               <MdMenu size={24} />
             </button>
+
+            {/* Mobile Logo Brand */}
+            <div className={styles.mobileLogo}>
+              <div className={styles.mobileLogoIcon}>
+                <LeoMark />
+              </div>
+              <span className={styles.mobileLogoText}>
+                Leo<span className={styles.mobileLogoDot}>.</span>
+              </span>
+            </div>
           </div>
 
           <div className={styles.topbarRight}>

@@ -1,6 +1,7 @@
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { useAuth } from '../../context/useAuth';
+import LeoMark from '../branding/LeoMark';
 import {
   MdDashboard, MdStore, MdInventory2, MdPointOfSale,
   MdPeople, MdReceipt, MdLogout, MdAccountBalanceWallet, MdPayments,
@@ -9,49 +10,57 @@ import {
 import styles from './Sidebar.module.css';
 
 const ownerLinks = [
-  { to: '/dashboard', label: 'Dashboard', icon: <MdDashboard /> },
-  { to: '/pos', label: 'POS Register', icon: <MdPointOfSale /> },
-  { to: '/products', label: 'Inventory', icon: <MdInventory2 /> },
-  { to: '/sales', label: 'Sales Ledger', icon: <MdReceipt /> },
+  { to: '/owner/dashboard', label: 'Dashboard', icon: <MdDashboard /> },
+  { to: '/owner/pos', label: 'POS Register', icon: <MdPointOfSale /> },
+  { to: '/owner/products', label: 'Inventory', icon: <MdInventory2 /> },
+  { to: '/owner/sales', label: 'Sales Ledger', icon: <MdReceipt /> },
   {
     label: 'Customers & Debts',
     icon: <MdPeople />,
     children: [
-      { to: '/customers', label: 'Customers', icon: <MdPeople /> },
-      { to: '/debts', label: 'Customer Debts', icon: <MdPayments /> },
+      { to: '/owner/customers', label: 'Customers', icon: <MdPeople /> },
+      { to: '/owner/debts', label: 'Customer Debts', icon: <MdPayments /> },
     ],
   },
   {
     label: 'Expenses & Stock Use',
     icon: <MdMoneyOff />,
     children: [
-      { to: '/expenses', label: 'Expenses', icon: <MdMoneyOff /> },
-      { to: '/stock-use', label: 'Stock Use', icon: <MdInventory /> },
+      { to: '/owner/expenses', label: 'Expenses', icon: <MdMoneyOff /> },
+      { to: '/owner/stock-use', label: 'Stock Use', icon: <MdInventory /> },
     ],
   },
-  { to: '/accounts', label: 'Shop Account', icon: <MdAccountBalanceWallet /> },
-  { to: '/shops', label: 'Outlets & Shops', icon: <MdStore /> },
-  { to: '/staff', label: 'Staff & Team', icon: <MdPeople /> },
+  { to: '/owner/accounts', label: 'Shop Account', icon: <MdAccountBalanceWallet /> },
+  { to: '/owner/shops', label: 'Outlets & Shops', icon: <MdStore /> },
+  { to: '/owner/staff', label: 'Staff & Team', icon: <MdPeople /> },
 ];
 
-const cashierLinks = [
-  { to: '/pos', label: 'POS Register', icon: <MdPointOfSale /> },
-  { to: '/sales', label: 'Recent Receipts', icon: <MdReceipt /> },
+const clientLinks = [
+  { to: '/client/pos', label: 'POS Register', icon: <MdPointOfSale /> },
+  { to: '/client/sales', label: 'Recent Receipts', icon: <MdReceipt /> },
   {
     label: 'Customers & Debts',
     icon: <MdPeople />,
     children: [
-      { to: '/customers', label: 'Customers', icon: <MdPeople /> },
-      { to: '/debts', label: 'Customer Debts', icon: <MdPayments /> },
+      { to: '/client/customers', label: 'Customers', icon: <MdPeople /> },
+      { to: '/client/debts', label: 'Customer Debts', icon: <MdPayments /> },
     ],
   },
 ];
 
-export default function Sidebar({ isOpen, onCloseMobile }) {
+const platformLinks = [
+  { to: '/owner/admin/tenants', label: 'Shop Accounts', icon: <MdStore /> },
+];
+
+export default function Sidebar({ isOpen, onCloseMobile, variant = 'owner' }) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const links = user?.role === 'OWNER' ? ownerLinks : cashierLinks;
+  const links = variant === 'platform'
+    ? platformLinks
+    : variant === 'client'
+      ? clientLinks
+      : ownerLinks;
   const [expandedGroups, setExpandedGroups] = useState({});
 
   useEffect(() => {
@@ -67,7 +76,7 @@ export default function Sidebar({ isOpen, onCloseMobile }) {
 
   const handleLogout = () => {
     logout();
-    navigate('/login');
+    navigate(variant === 'platform' ? '/platform/login' : variant === 'owner' ? '/owner/login' : '/login');
   };
 
   const getInitials = (name) => {
@@ -83,7 +92,7 @@ export default function Sidebar({ isOpen, onCloseMobile }) {
       <aside className={`${styles.sidebar} ${isOpen ? styles.sidebarMobileOpen : ''}`}>
         <div className={styles.brand}>
           <div className={styles.brandLeft}>
-            <div className={styles.brandIcon}>L</div>
+            <div className={styles.brandIcon}><LeoMark /></div>
             <div className={styles.brandText}>
               <div className={styles.logoRow}>
                 <span className={styles.logo}>Leo</span>

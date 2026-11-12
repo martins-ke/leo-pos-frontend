@@ -27,7 +27,7 @@ export function getVoiceFeatureFlag() {
 
 export function setVoiceFeatureFlag(value) {
   try {
-    const nextValue = Boolean(value) ? 'true' : 'false';
+    const nextValue = value ? 'true' : 'false';
     getStorage().setItem(STORAGE_KEY, nextValue);
     return nextValue === 'true';
   } catch {

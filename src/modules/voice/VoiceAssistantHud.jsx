@@ -39,7 +39,6 @@ export default function VoiceAssistantHud({ voice }) {
     pendingPaymentChoice,
     selectPaymentMethod,
     stockDecision,
-    analyticsData,
     toggleListening,
     cancelCurrentPrompt,
     selectDisambiguationOption,

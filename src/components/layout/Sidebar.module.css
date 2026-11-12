@@ -10,7 +10,7 @@
 .sidebar {
   height: 100vh;
   background: var(--sidebar-bg);
-  border-right: 1px solid var(--sidebar-border);
+  border-right: var(--border-width) solid var(--sidebar-border);
   display: flex;
   flex-direction: column;
   position: sticky;
@@ -26,8 +26,8 @@
 }
 
 .brand {
-  padding: 16px;
-  border-bottom: 1px solid var(--sidebar-border);
+  padding: var(--space-4);
+  border-bottom: var(--border-width) solid var(--sidebar-border);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -38,7 +38,7 @@
 .brandLeft {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: var(--space-3);
   overflow: hidden;
 }
 
@@ -46,8 +46,8 @@
   width: 38px;
   height: 38px;
   min-width: 38px;
-  border-radius: 10px;
-  background: var(--brand-gradient);
+  border-radius: var(--radius-lg);
+  background: var(--brand-accent);
   color: var(--text-on-primary);
   display: flex;
   align-items: center;
@@ -55,6 +55,11 @@
   font-size: var(--font-size-4xl);
   font-weight: 800;
   box-shadow: var(--shadow-brand);
+}
+
+.brandIcon svg {
+  width: 25px;
+  height: 25px;
 }
 
 .brandText {
@@ -66,7 +71,7 @@
 .logoRow {
   display: flex;
   align-items: baseline;
-  gap: 6px;
+  gap: var(--space-1-5);
 }
 
 .logo {
@@ -92,9 +97,9 @@
 
 .collapseToggleBtn {
   background: var(--bg-subtle);
-  border: 1px solid var(--sidebar-border);
+  border: var(--border-width) solid var(--sidebar-border);
   color: var(--sidebar-text);
-  border-radius: 6px;
+  border-radius: var(--radius-sm-plus);
   width: 28px;
   height: 28px;
   display: flex;
@@ -112,10 +117,10 @@
 
 .nav {
   flex: 1;
-  padding: 12px 10px;
+  padding: var(--space-3) var(--space-2-5);
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: var(--space-1);
   overflow-y: auto;
 }
 
@@ -124,16 +129,16 @@
   font-weight: 700;
   color: var(--text-placeholder);
   letter-spacing: 1.5px;
-  padding: 4px 10px 8px;
+  padding: var(--space-1) var(--space-2-5) var(--space-2);
   white-space: nowrap;
 }
 
 .link {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  padding: 0.75rem;
-  border-radius: 8px;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
   color: var(--sidebar-text);
   text-decoration: none;
   font-size: var(--font-size-base);
@@ -144,7 +149,7 @@
 
 .collapsed .link {
   justify-content: center;
-  padding: 12px;
+  padding: var(--space-3);
 }
 
 .link:hover {
@@ -153,15 +158,15 @@
 }
 
 .active {
-  background: var(--primary-gradient);
-  color: var(--text-on-primary) !important;
+  background: var(--bg-card);
   font-weight: 700;
+   color: var(--sidebar-text-active);
   box-shadow: var(--shadow-brand-active);
+  border: var(--border-width) solid var(--border-default);
 }
 
 .active:hover {
-  background: var(--primary-gradient);
-  color: var(--text-on-primary) !important;
+  background: var(--bg-card);
 }
 
 .icon {
@@ -188,11 +193,11 @@
 .groupToggle {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: var(--space-3);
   width: 100%;
-  padding: 0.75rem;
+  padding: var(--space-3);
   border: 0;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   background: transparent;
   color: var(--sidebar-text);
   font: inherit;
@@ -220,9 +225,9 @@
   display: flex;
   flex-direction: column;
   gap: 2px;
-  margin-left: 0.75rem;
-  padding-left: 0.5rem;
-  border-left: 1px solid var(--sidebar-border);
+  margin-left: var(--space-3);
+  padding-left: var(--space-2);
+  border-left: var(--border-width) solid var(--sidebar-border);
 }
 
 .childLink {
@@ -233,7 +238,7 @@
 
 .collapsed .groupToggle {
   justify-content: center;
-  padding: 12px;
+  padding: var(--space-3);
 }
 
 .collapsed .groupToggle .label,
@@ -243,28 +248,28 @@
 }
 
 .footer {
-  padding: 12px 10px;
-  border-top: 1px solid var(--sidebar-border);
+  padding: var(--space-3) var(--space-2-5);
+  border-top: var(--border-width) solid var(--sidebar-border);
   background: var(--sidebar-footer-bg);
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--space-2);
 }
 
 .userCard {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 8px 10px;
-  border-radius: 8px;
+  gap: var(--space-2-5);
+  padding: var(--space-2) var(--space-2-5);
+  border-radius: var(--radius-md);
   background: var(--sidebar-user-bg);
-  border: 1px solid var(--sidebar-border);
+  border: var(--border-width) solid var(--sidebar-border);
   overflow: hidden;
 }
 
 .collapsed .userCard {
   justify-content: center;
-  padding: 8px 0;
+  padding: var(--space-2) 0;
 }
 
 .avatar {
@@ -279,7 +284,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid var(--border-default);
+  border: var(--border-width) solid var(--border-default);
 }
 
 .userInfo {
@@ -308,12 +313,12 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: var(--space-2);
   width: 100%;
-  padding: 8px 12px;
-  border-radius: 8px;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
   background: var(--danger-bg);
-  border: 1px solid var(--danger-border);
+  border: var(--border-width) solid var(--danger-border);
   color: var(--danger-text);
   font-size: var(--font-size-md);
   font-weight: 600;
@@ -350,11 +355,11 @@
   /* On mobile open drawer, links should always show full layout */
   .sidebarMobileOpen .link {
     justify-content: flex-start;
-    padding: 0.75rem;
+    padding: var(--space-3);
   }
   .sidebarMobileOpen .groupToggle {
     justify-content: flex-start;
-    padding: 0.75rem;
+    padding: var(--space-3);
   }
   .sidebarMobileOpen .groupToggle .label,
   .sidebarMobileOpen .groupChevron {
@@ -365,7 +370,7 @@
   }
   .sidebarMobileOpen .userCard {
     justify-content: flex-start;
-    padding: 8px 10px;
+    padding: var(--space-2) var(--space-2-5);
   }
 
   .sidebarMobileOpen .link,
@@ -375,7 +380,7 @@
 
   .logoutBtn {
     min-height: 2.5rem;
-    padding: 0.25rem 0.45rem;
+    padding: var(--space-1) 0.45rem;
     font-size: var(--font-size-base);
   }
 }

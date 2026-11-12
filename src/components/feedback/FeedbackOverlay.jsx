@@ -41,6 +41,7 @@ function MessageCard({ message, onDismiss }) {
 function Dialog({ dialog, onDismiss }) {
   const dialogElement = useRef(null);
   const isConfirmation = dialog.kind === 'confirm';
+  const isAcknowledgement = dialog.kind === 'alert';
   const isLoading = dialog.kind === 'status' && dialog.phase === 'loading';
   const iconVariant = isLoading
     ? styles.loadingIcon
@@ -56,7 +57,7 @@ function Dialog({ dialog, onDismiss }) {
   }, [dialog.id]);
 
   const onKeyDown = (event) => {
-    if (event.key === 'Escape' && !isLoading) {
+    if (event.key === 'Escape' && !isLoading && !isAcknowledgement) {
       event.preventDefault();
       onDismiss(false);
       return;
@@ -87,13 +88,13 @@ function Dialog({ dialog, onDismiss }) {
     <div
       className={styles.dialogBackdrop}
       onClick={(event) => {
-        if (event.target === event.currentTarget && !isLoading) onDismiss(false);
+        if (event.target === event.currentTarget && !isLoading && !isAcknowledgement) onDismiss(false);
       }}
     >
       <section
         ref={dialogElement}
         className={styles.dialog}
-        role={isConfirmation ? 'alertdialog' : 'dialog'}
+        role={isConfirmation || isAcknowledgement ? 'alertdialog' : 'dialog'}
         aria-modal="true"
         aria-labelledby={`feedback-title-${dialog.id}`}
         aria-describedby={`feedback-message-${dialog.id}`}
@@ -135,7 +136,7 @@ function Dialog({ dialog, onDismiss }) {
               onClick={() => onDismiss(false)}
               data-autofocus
             >
-              OK
+              {dialog.okLabel ?? 'OK'}
             </button>
           )
         )}

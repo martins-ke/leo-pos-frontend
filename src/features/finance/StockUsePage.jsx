@@ -14,6 +14,7 @@ export default function StockUsePage() {
   const [products, setProducts] = useState([]);
   const [withdrawals, setWithdrawals] = useState([]);
   const [purchases, setPurchases] = useState([]);
+  const [todayStockUseTotal, setTodayStockUseTotal] = useState(0);
   const [page, setPage] = useState(0);
   const [hasNext, setHasNext] = useState(false);
   const [mode, setMode] = useState('withdraw');
@@ -36,8 +37,9 @@ export default function StockUsePage() {
     Promise.all([
       api.get(`/products?shopId=${encodeURIComponent(shopId)}`),
       api.get(`/inventory/withdrawals?shopId=${encodeURIComponent(shopId)}&page=${page}&size=25`),
-      api.get(`/inventory/purchases?shopId=${encodeURIComponent(shopId)}&page=${page}&size=25`)
-    ]).then(([productRes, withdrawalRes, purchaseRes]) => {
+      api.get(`/inventory/purchases?shopId=${encodeURIComponent(shopId)}&page=${page}&size=25`),
+      api.get(`/inventory/withdrawals/daily-summary?shopId=${encodeURIComponent(shopId)}`)
+    ]).then(([productRes, withdrawalRes, purchaseRes, dailyRes]) => {
       if (productRes.success) setProducts(productRes.body || []);
       else {
         setProducts([]);
@@ -54,6 +56,8 @@ export default function StockUsePage() {
         notify({ type: 'error', message: purchaseRes.message || 'Could not load stock purchases.' });
       }
       setHasNext(withdrawalRes.body?.last === false || purchaseRes.body?.last === false);
+      if (dailyRes.success) setTodayStockUseTotal(Number(dailyRes.body || 0));
+      else notify({ type: 'error', message: dailyRes.message || "Could not load today's stock-use total." });
     }).catch(() => notify({ type: 'error', message: 'Could not load stock movement history.' }));
   }, [shopId, page]);
 
@@ -100,9 +104,15 @@ export default function StockUsePage() {
         <ExpandingSelect value={shopId} onChange={value => { setShopId(value); setPage(0); }} className={styles.shopSelect}
           ariaLabel="Select shop" options={shops.map(shop => ({ value: shop.id, label: shop.name }))} />
       </header>
+      <div className={styles.summaryGrid}>
+        <article className={styles.summaryCard}>
+          <span className={styles.summaryLabel}>Stock used today</span>
+          <strong className={styles.summaryValue}>KES {todayStockUseTotal.toLocaleString()}</strong>
+        </article>
+      </div>
       <section className={styles.panel}>
         <div className={styles.toolbar}>
-          <h2>Recent stock movements</h2>
+          <div><h2>Stock movement history</h2><span className={styles.selectHint}>Today's stock use above; browse previous movements below.</span></div>
           <div className={styles.actions}>
             <button type="button" className={styles.secondaryButton} disabled={!shopId || !products.length}
               onClick={() => { setMode('withdraw'); setWizardStep(0); setWizardOpen(true); }}>

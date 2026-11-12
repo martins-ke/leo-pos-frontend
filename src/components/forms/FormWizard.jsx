@@ -13,6 +13,7 @@ export default function FormWizard({
   onSubmit,
   submitLabel,
   submitting = false,
+  embedded = false,
   children
 }) {
   const formRef = useRef(null);
@@ -48,12 +49,17 @@ export default function FormWizard({
 
   return (
     <div
-      className={styles.overlay}
+      className={embedded ? styles.embeddedOverlay : styles.overlay}
       onMouseDown={event => {
-        if (event.target === event.currentTarget && !busy) onClose();
+        if (!embedded && event.target === event.currentTarget && !busy) onClose();
       }}
     >
-      <section className={styles.dialog} role="dialog" aria-modal="true" aria-labelledby="wizard-title">
+      <section
+        className={`${styles.dialog} ${embedded ? styles.embeddedDialog : ''}`}
+        role="dialog"
+        aria-modal={!embedded}
+        aria-labelledby="wizard-title"
+      >
         <header className={styles.header}>
           <div>
             <h2 id="wizard-title">{title}</h2>
@@ -73,21 +79,40 @@ export default function FormWizard({
         </ol>
         <form className={styles.form} ref={formRef} onSubmit={handleSubmit}>
           <div className={styles.body}>{children}</div>
-          <footer className={styles.footer}>
-            <button type="button" className={buttonStyles.secondaryButton} onClick={onClose} disabled={busy}>
+          <footer className={`${styles.footer} ${step === 0 ? styles.footerFirstStep : ''}`}>
+            <button
+              type="button"
+              className={`${buttonStyles.secondaryButton} ${styles.cancelButton}`}
+              onClick={onClose}
+              disabled={busy}
+            >
               Cancel
             </button>
             {step > 0 && (
-              <button type="button" className={buttonStyles.secondaryButton} onClick={onBack} disabled={busy}>
+              <button
+                type="button"
+                className={`${buttonStyles.secondaryButton} ${styles.backButton}`}
+                onClick={onBack}
+                disabled={busy}
+              >
                 Back
               </button>
             )}
             {isLastStep ? (
-              <button type="submit" className={buttonStyles.primaryButton} disabled={busy}>
+              <button
+                type="submit"
+                className={`${buttonStyles.primaryButton} ${styles.submitButton}`}
+                disabled={busy}
+              >
                 {busy ? 'Saving...' : submitLabel}
               </button>
             ) : (
-              <button type="button" className={buttonStyles.primaryButton} onClick={handleNext} disabled={busy}>
+              <button
+                type="button"
+                className={`${buttonStyles.primaryButton} ${styles.submitButton}`}
+                onClick={handleNext}
+                disabled={busy}
+              >
                 Continue
               </button>
             )}
