@@ -1,0 +1,8 @@
+.overlay {
+  position: fixed;
+  z-index: 1300;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: var(--bg-app);
+}

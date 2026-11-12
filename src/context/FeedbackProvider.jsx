@@ -7,8 +7,25 @@ const DEFAULT_MESSAGE_DURATION = 6000;
 export function FeedbackProvider({ children }) {
   const [messages, setMessages] = useState([]);
   const [dialog, setDialog] = useState(null);
+  const [pendingRequests, setPendingRequests] = useState([]);
   const dialogRef = useRef(null);
   const nextId = useRef(0);
+
+  useEffect(() => {
+    const onRequestStarted = (event) => {
+      setPendingRequests((current) => [...current, event.detail]);
+    };
+    const onRequestFinished = (event) => {
+      setPendingRequests((current) => current.filter(({ id }) => id !== event.detail.id));
+    };
+
+    window.addEventListener('leo-api-request-start', onRequestStarted);
+    window.addEventListener('leo-api-request-finish', onRequestFinished);
+    return () => {
+      window.removeEventListener('leo-api-request-start', onRequestStarted);
+      window.removeEventListener('leo-api-request-finish', onRequestFinished);
+    };
+  }, []);
 
   const replaceDialog = useCallback((nextDialog) => {
     const currentDialog = dialogRef.current;
@@ -86,20 +103,24 @@ export function FeedbackProvider({ children }) {
 
   const beginSaving = useCallback((options = {}) => {
     const id = ++nextId.current;
-    replaceDialog({
+    const currentDialog = dialogRef.current;
+    if (currentDialog?.kind === 'confirm') currentDialog.resolve(false);
+
+    const loadingDialog = {
       kind: 'status',
       id,
       phase: 'loading',
       title: options?.title ?? 'Saving',
       message: options?.message ?? 'Please wait while your changes are saved.',
-    });
+    };
+    dialogRef.current = loadingDialog;
+    setDialog(null);
 
     const finish = (phase, result = {}) => {
       if (dialogRef.current?.kind !== 'status' || dialogRef.current.id !== id) return;
 
-      const currentDialog = dialogRef.current;
       const nextDialog = {
-        ...currentDialog,
+        ...loadingDialog,
         phase,
         title: result.title ?? (phase === 'success' ? 'Saved' : 'Unable to save'),
         message: result.message ?? (
@@ -119,13 +140,16 @@ export function FeedbackProvider({ children }) {
         if (dialogRef.current?.id === id) dismissDialog();
       },
     };
-  }, [dismissDialog, replaceDialog]);
+  }, [dismissDialog]);
 
   useEffect(() => () => {
     if (dialogRef.current?.kind === 'confirm') dialogRef.current.resolve(false);
   }, []);
 
   const value = { notify, alert, confirm, beginSaving };
+  const loadingLabel = pendingRequests.some(({ label }) => label === 'Saving')
+    ? 'Saving'
+    : pendingRequests[pendingRequests.length - 1]?.label ?? 'Loading data';
 
   return (
     <FeedbackContext.Provider value={value}>
@@ -133,6 +157,8 @@ export function FeedbackProvider({ children }) {
       <FeedbackOverlay
         messages={messages}
         dialog={dialog}
+        loadingLabel={loadingLabel}
+        showRequestOverlay={pendingRequests.length > 0}
         onDismissMessage={dismissMessage}
         onDismissDialog={dismissDialog}
       />

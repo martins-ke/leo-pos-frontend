@@ -20,9 +20,12 @@ export default function ProductsPage() {
   const { notify, beginSaving, confirm } = useFeedback();
   const [products, setProducts] = useState([]);
   const [shops, setShops] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [categorySuggestions, setCategorySuggestions] = useState([]);
   const [shopId, setShopId] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [stockFilter, setStockFilter] = useState('ALL');
+  const [categoryFilter, setCategoryFilter] = useState('');
   const [page, setPage] = useState(0);
 
   // Modals
@@ -31,6 +34,9 @@ export default function ProductsPage() {
   const [editingProduct, setEditingProduct] = useState(null);
   const [restockProduct, setRestockProduct] = useState(null);
   const [restockQty, setRestockQty] = useState('');
+  const [showCreateCategory, setShowCreateCategory] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState('');
+  const [creatingCategory, setCreatingCategory] = useState(false);
 
   // Form State
   const initialForm = {
@@ -39,7 +45,8 @@ export default function ProductsPage() {
     sellingPrice: '',
     quantityInStock: '',
     minStockLevel: '5',
-    unit: 'pcs'
+    unit: 'pcs',
+    categoryId: ''
   };
   const [form, setForm] = useState(initialForm);
 
@@ -48,6 +55,41 @@ export default function ProductsPage() {
 
   const showAlert = (type, text) => {
     notify({ type, message: text });
+  };
+
+  const handleCreateCategory = async () => {
+    const name = newCategoryName.trim();
+    const targetShopId = editingProduct?.shop?.id || shopId || shops[0]?.id;
+    if (!name) {
+      showAlert('error', 'Enter a category name.');
+      return;
+    }
+    if (!targetShopId) {
+      showAlert('error', 'Create or select an outlet before adding a category.');
+      return;
+    }
+
+    setCreatingCategory(true);
+    try {
+      const res = await api.post(
+        `/product-categories/${encodeURIComponent(targetShopId)}`,
+        { name },
+        'Creating category'
+      );
+      if (!res.success || !res.body) {
+        showAlert('error', res.message || 'Could not create the category.');
+        return;
+      }
+      setCategories(current => [...current.filter(category => category.id !== res.body.id), res.body]);
+      setForm(current => ({ ...current, categoryId: res.body.id }));
+      setNewCategoryName('');
+      setShowCreateCategory(false);
+      showAlert('success', `Category "${res.body.name}" was created and selected.`);
+    } catch {
+      showAlert('error', 'Could not connect to the server while creating the category.');
+    } finally {
+      setCreatingCategory(false);
+    }
   };
 
   const loadShops = async () => {
@@ -82,12 +124,42 @@ export default function ProductsPage() {
     }
   };
 
+  const fetchCategories = async () => {
+    try {
+      const url = shopId ? `/product-categories?shopId=${encodeURIComponent(shopId)}` : '/product-categories';
+      const res = await api.get(url);
+      if (res.success && res.body) {
+        setCategories(res.body);
+      } else {
+        setCategories([]);
+        showAlert('error', res.message || 'Failed to load product categories');
+      }
+    } catch {
+      showAlert('error', 'Failed to load product categories');
+    }
+  };
+
+  const fetchCategorySuggestions = async () => {
+    try {
+      const res = await api.get('/product-categories/suggestions');
+      if (res.success && res.body) {
+        setCategorySuggestions(res.body);
+      } else {
+        showAlert('error', res.message || 'Failed to load category suggestions');
+      }
+    } catch {
+      showAlert('error', 'Failed to load category suggestions');
+    }
+  };
+
   useEffect(() => {
     loadShops();
+    fetchCategorySuggestions();
   }, []);
 
   useEffect(() => {
     fetchProducts();
+    fetchCategories();
   }, [shopId]);
 
   const handleCreateOrUpdate = async (e) => {
@@ -98,18 +170,17 @@ export default function ProductsPage() {
       sellingPrice: parseFloat(form.sellingPrice),
       quantityInStock: parseFloat(form.quantityInStock),
       minStockLevel: parseFloat(form.minStockLevel),
-      unit: form.unit.trim()
+      unit: form.unit.trim(),
+      categoryId: editingProduct?.category?.active === false
+        && editingProduct.category.id === form.categoryId
+        ? ''
+        : form.categoryId,
+      clearCategory: Boolean(editingProduct && !form.categoryId)
     };
 
     if (payload.sellingPrice < payload.buyingPrice) {
-      const confirmed = await confirm({
-        title: 'Selling below cost',
-        message: 'The selling price is less than the buying price. Continue?',
-        confirmLabel: 'Continue',
-      });
-      if (!confirmed) {
-        return;
-      }
+      showAlert('error', 'Selling price must be greater than or equal to buying price.');
+      return;
     }
 
     const saveStatus = beginSaving({
@@ -198,21 +269,40 @@ export default function ProductsPage() {
       sellingPrice: p.selling_price || p.sellingPrice || '',
       quantityInStock: p.quantity,
       minStockLevel: p.min_stock_level || p.minStockLevel || '5',
-      unit: p.unit || 'pcs'
+      unit: p.unit || 'pcs',
+      categoryId: p.category?.id || ''
     });
+    setShowCreateCategory(false);
     setShowAddModal(true);
   };
 
+  const targetShopId = editingProduct?.shop?.id || shopId || shops[0]?.id || '';
+  const productCategories = categories
+    .filter(category => category.shop_id === targetShopId || category.shopId === targetShopId)
+    .filter(category => category.active !== false);
+  const archivedProductCategory = editingProduct?.category?.active === false
+    ? editingProduct.category
+    : null;
+  const categoryOptions = [
+    { value: '', label: 'Uncategorized' },
+    ...productCategories.map(category => ({ value: category.id, label: category.name })),
+    ...(archivedProductCategory
+      ? [{ value: archivedProductCategory.id, label: `${archivedProductCategory.name} (archived)` }]
+      : [])
+  ];
+
   const filteredProducts = products.filter(p => {
     const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesCategory = !categoryFilter || p.category?.id === categoryFilter;
+    const matchesBase = matchesSearch && matchesCategory;
     const isOut = p.quantity <= 0;
     const isLow = p.quantity > 0 && p.quantity <= (p.min_stock_level || p.minStockLevel);
     const isHealthy = p.quantity > (p.min_stock_level || p.minStockLevel);
 
-    if (stockFilter === 'LOW') return matchesSearch && isLow;
-    if (stockFilter === 'OUT') return matchesSearch && isOut;
-    if (stockFilter === 'HEALTHY') return matchesSearch && isHealthy;
-    return matchesSearch;
+    if (stockFilter === 'LOW') return matchesBase && isLow;
+    if (stockFilter === 'OUT') return matchesBase && isOut;
+    if (stockFilter === 'HEALTHY') return matchesBase && isHealthy;
+    return matchesBase;
   });
   const pageCount = Math.ceil(filteredProducts.length / PAGE_SIZE);
   const visibleProducts = filteredProducts.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
@@ -237,7 +327,7 @@ export default function ProductsPage() {
         <div className={styles.headerActions}>
           <ExpandingSelect
             value={shopId}
-            onChange={value => { setShopId(value); setPage(0); }}
+            onChange={value => { setShopId(value); setCategoryFilter(''); setPage(0); }}
             className={styles.outletSelect}
             ariaLabel="Filter products by outlet"
             startAdornment={<MdStore size={18} className={styles.receiptRef} />}
@@ -257,6 +347,7 @@ export default function ProductsPage() {
                 setEditingProduct(null);
                 setForm(initialForm);
                 setFormStep(0);
+                setShowCreateCategory(false);
                 setShowAddModal(true);
               }}
             >
@@ -317,6 +408,26 @@ export default function ProductsPage() {
           )}
         </div>
 
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: '220px', flex: '1 1 220px' }}>
+          <span style={{ color: 'var(--text-secondary)', fontSize: 'var(--font-size-sm)', fontWeight: 600, whiteSpace: 'nowrap' }}>
+            Category
+          </span>
+          <ExpandingSelect
+            value={categoryFilter}
+            onChange={value => { setCategoryFilter(value); setPage(0); }}
+            className={styles.selectControl}
+            ariaLabel="Filter products by category"
+            options={[
+              { value: '', label: 'All Categories' },
+              ...categories.map(category => {
+                const categoryShop = shops.find(shop => shop.id === (category.shop_id || category.shopId));
+                const label = shopId || !categoryShop ? category.name : `${category.name} · ${categoryShop.name}`;
+                return { value: category.id, label };
+              })
+            ]}
+          />
+        </div>
+
         <div className={styles.stockFilterList}>
           {[
             { id: 'ALL', label: 'All Items' },
@@ -342,6 +453,7 @@ export default function ProductsPage() {
             <thead>
               <tr>
                 <th>Product Name</th>
+                <th>Category</th>
                 <th>Outlet</th>
                 <th>Unit</th>
                 <th>Cost (KES)</th>
@@ -355,7 +467,7 @@ export default function ProductsPage() {
             <tbody>
               {filteredProducts.length === 0 ? (
                 <tr>
-                  <td colSpan="9" className={styles.emptyTable}>
+                  <td colSpan="10" className={styles.emptyTable}>
                     {loading ? 'Loading catalog items...' : 'No products found. Click "Add New Product" to populate your catalog!'}
                   </td>
                 </tr>
@@ -372,6 +484,7 @@ export default function ProductsPage() {
                       <td>
                         <strong>{p.name}</strong>
                       </td>
+                      <td>{p.category?.name || '—'}</td>
                       <td>{p.shop?.name || 'Default Shop'}</td>
                       <td>
                         <span style={{ fontSize: 'var(--font-size-sm)', textTransform: 'uppercase', background: 'var(--bg-subtle)', padding: '2px 6px', borderRadius: '4px', fontWeight: 600 }}>
@@ -461,16 +574,71 @@ export default function ProductsPage() {
         submitLabel={editingProduct ? 'Save Changes' : 'Create Product'}
       >
         {formStep === 0 && (
-          <label style={{ display: 'grid', gap: '4px', color: 'var(--text-secondary)', fontWeight: 600 }}>
-            Product Name *
-            <input
-              placeholder="e.g. Basmati Rice 2kg"
-              required
-              value={form.name}
-              onChange={e => setForm({ ...form, name: e.target.value })}
-              style={{ width: '100%', padding: '9px 12px', border: '1px solid var(--border-strong)', borderRadius: '8px', fontSize: 'var(--font-size-base)', background: 'var(--bg-input)', color: 'var(--text-main)' }}
-            />
-          </label>
+          <div style={{ display: 'grid', gap: '14px' }}>
+            <label style={{ display: 'grid', gap: '4px', color: 'var(--text-secondary)', fontWeight: 600 }}>
+              Product Name *
+              <input
+                placeholder="e.g. Basmati Rice 2kg"
+                required
+                value={form.name}
+                onChange={e => setForm({ ...form, name: e.target.value })}
+                style={{ width: '100%', padding: '9px 12px', border: '1px solid var(--border-strong)', borderRadius: '8px', fontSize: 'var(--font-size-base)', background: 'var(--bg-input)', color: 'var(--text-main)' }}
+              />
+            </label>
+
+            <div style={{ display: 'grid', gap: '6px' }}>
+              <label style={{ color: 'var(--text-secondary)', fontWeight: 600 }}>
+                Category
+              </label>
+              <ExpandingSelect
+                value={form.categoryId}
+                onChange={categoryId => setForm({ ...form, categoryId })}
+                className={styles.selectControl}
+                ariaLabel="Product category"
+                options={categoryOptions}
+              />
+              <span style={{ color: 'var(--text-muted)', fontSize: 'var(--font-size-sm)' }}>
+                Categories are optional and belong to the selected outlet.
+              </span>
+              <button
+                type="button"
+                className={styles.viewRowBtn}
+                onClick={() => setShowCreateCategory(current => !current)}
+                style={{ justifySelf: 'start', color: 'var(--primary)', borderColor: 'var(--primary)' }}
+              >
+                <MdAdd size={16} /> {showCreateCategory ? 'Cancel new category' : 'Create a category'}
+              </button>
+              {showCreateCategory && (
+                <div style={{ display: 'grid', gap: '8px', padding: '12px', border: '1px solid var(--border-default)', borderRadius: '8px', background: 'var(--bg-subtle)' }}>
+                  <label style={{ display: 'grid', gap: '4px', color: 'var(--text-secondary)', fontWeight: 600 }}>
+                    New Category Name *
+                    <input
+                      list="product-category-suggestions"
+                      maxLength={80}
+                      placeholder="e.g. Beverages"
+                      value={newCategoryName}
+                      onChange={e => setNewCategoryName(e.target.value)}
+                      style={{ width: '100%', padding: '9px 12px', border: '1px solid var(--border-strong)', borderRadius: '8px', fontSize: 'var(--font-size-base)', background: 'var(--bg-input)', color: 'var(--text-main)' }}
+                    />
+                    <datalist id="product-category-suggestions">
+                      {categorySuggestions.map(suggestion => (
+                        <option key={suggestion} value={suggestion} />
+                      ))}
+                    </datalist>
+                  </label>
+                  <button
+                    type="button"
+                    className={styles.launchPosBtn}
+                    onClick={handleCreateCategory}
+                    disabled={creatingCategory}
+                    style={{ justifySelf: 'start' }}
+                  >
+                    {creatingCategory ? 'Creating...' : 'Create and select category'}
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
         )}
         {formStep === 1 && (
           <div style={{ display: 'grid', gap: '14px' }}>

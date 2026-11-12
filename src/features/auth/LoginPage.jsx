@@ -23,7 +23,7 @@ export default function LoginPage() {
     e.preventDefault();
     setLoading(true);
     try {
-      const res = await api.post('/auth/login', form);
+      const res = await api.post('/auth/login', form, 'Signing in');
       if (res.success && res.body) {
         const user = res.body.user || res.body;
         if (res.body.token) {

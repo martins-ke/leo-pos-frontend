@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { api } from '../../api/api';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -32,6 +32,11 @@ export default function DashboardPage() {
   const [selectedShopId, setSelectedShopId] = useState('');
   const [loading, setLoading] = useState(true);
   const [viewReceipt, setViewReceipt] = useState(null);
+  const [salesForTrend, setSalesForTrend] = useState([]);
+  const [salesTrendRange, setSalesTrendRange] = useState(7);
+  const [salesTrendLoading, setSalesTrendLoading] = useState(true);
+  const [stockProducts, setStockProducts] = useState([]);
+  const [stockProductsLoading, setStockProductsLoading] = useState(true);
 
   const fetchDashboardData = () => {
     setLoading(true);
@@ -65,13 +70,132 @@ export default function DashboardPage() {
     fetchDashboardData();
   }, [selectedShopId]);
 
-  const todayCollected = [
-    data.todayCashCollected,
-    data.todayMpesaCollected,
-    data.todayCardCollected,
-    data.todayBankTransferCollected,
-  ].reduce((total, amount) => total + Number(amount || 0), 0);
+  useEffect(() => {
+    let isCurrentRequest = true;
+    const shopQuery = selectedShopId ? `?shopId=${encodeURIComponent(selectedShopId)}` : '';
+    setSalesTrendLoading(true);
+    setStockProductsLoading(true);
 
+    Promise.all([api.get(`/sales${shopQuery}`), api.get(`/products${shopQuery}`)])
+      .then(([salesRes, productsRes]) => {
+        if (!isCurrentRequest) return;
+
+        if (salesRes.success && Array.isArray(salesRes.body)) {
+          setSalesForTrend(salesRes.body);
+        } else {
+          setSalesForTrend([]);
+          notify({ type: 'error', message: salesRes.message || 'Could not load sales trend data.' });
+        }
+
+        if (productsRes.success && Array.isArray(productsRes.body)) {
+          setStockProducts(productsRes.body);
+        } else {
+          setStockProducts([]);
+          notify({ type: 'error', message: productsRes.message || 'Could not load stock levels.' });
+        }
+      })
+      .catch(() => {
+        if (!isCurrentRequest) return;
+        setSalesForTrend([]);
+        setStockProducts([]);
+        notify({ type: 'error', message: 'Could not connect to the server while loading sales and stock data.' });
+      })
+      .finally(() => {
+        if (isCurrentRequest) {
+          setSalesTrendLoading(false);
+          setStockProductsLoading(false);
+        }
+      });
+
+    return () => {
+      isCurrentRequest = false;
+    };
+  }, [selectedShopId]);
+
+  const salesTrend = useMemo(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const days = Array.from({ length: salesTrendRange }, (_, index) => {
+      const date = new Date(today);
+      date.setDate(today.getDate() - salesTrendRange + index + 1);
+      return {
+        date,
+        key: `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`,
+        total: 0,
+      };
+    });
+    const totalsByDay = new Map(days.map(day => [day.key, day]));
+
+    salesForTrend.forEach(sale => {
+      const date = new Date(sale.createdAt);
+      const amount = Number(sale.grandTotal);
+      if (!Number.isFinite(date.getTime()) || !Number.isFinite(amount)) return;
+      const day = totalsByDay.get(`${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`);
+      if (day) day.total += amount;
+    });
+
+    const maxTotal = Math.max(0, ...days.map(day => day.total));
+    const chartMax = maxTotal || 1;
+    const chartPoints = days.map((day, index) => ({
+      ...day,
+      x: 40 + (index * 650) / Math.max(days.length - 1, 1),
+      y: 174 - (day.total / chartMax) * 146,
+    }));
+    const linePath = chartPoints.map(point => `${point.x},${point.y}`).join(' ');
+    const areaPath = chartPoints.length
+      ? `M ${chartPoints[0].x},174 L ${chartPoints.map(point => `${point.x},${point.y}`).join(' L ')} L ${chartPoints[chartPoints.length - 1].x},174 Z`
+      : '';
+    const labelStep = salesTrendRange === 7 ? 1 : 6;
+    const labels = chartPoints.filter((_, index) => index % labelStep === 0 || index === chartPoints.length - 1);
+
+    return { chartPoints, areaPath, linePath, labels, maxTotal, chartMax };
+  }, [salesForTrend, salesTrendRange]);
+
+  const topSellingStock = useMemo(() => {
+    const stockByProduct = new Map();
+    stockProducts.forEach(product => {
+      const name = String(product.name || '').trim();
+      const key = name.toLocaleLowerCase();
+      if (!key) return;
+
+      const existing = stockByProduct.get(key) || {
+        name,
+        quantity: 0,
+        minStockLevel: 0,
+        units: new Set(),
+      };
+      existing.quantity += Number(product.quantity) || 0;
+      existing.minStockLevel += Number(product.min_stock_level ?? product.minStockLevel) || 0;
+      if (product.unit) existing.units.add(product.unit);
+      stockByProduct.set(key, existing);
+    });
+
+    const salesByProduct = new Map();
+    salesForTrend.forEach(sale => {
+      (Array.isArray(sale.items) ? sale.items : []).forEach(item => {
+        const name = String(item.productName || item.product?.name || item.name || '').trim();
+        const key = name.toLocaleLowerCase();
+        const quantity = Number(item.quantity);
+        if (!key || !Number.isFinite(quantity) || quantity <= 0) return;
+        salesByProduct.set(key, (salesByProduct.get(key) || 0) + quantity);
+      });
+    });
+
+    return [...salesByProduct.entries()]
+      .map(([key, unitsSold]) => {
+        const stock = stockByProduct.get(key);
+        return stock ? {
+          ...stock,
+          units: [...stock.units],
+          unitsSold,
+        } : null;
+      })
+      .filter(Boolean)
+      .sort((a, b) => b.unitsSold - a.unitsSold)
+      .slice(0, 5);
+  }, [salesForTrend, stockProducts]);
+
+  const maxTopSellerStock = Math.max(...topSellingStock.map(product => product.quantity), 1);
   return (
     <div className={styles.container}>
       {/* Header with Title and Outlet Filter */}
@@ -104,32 +228,40 @@ export default function DashboardPage() {
 
       {/* KPI Cards Grid */}
       <div className={styles.kpiGrid}>
-        <div className={styles.kpiCard}>
-          <div className={styles.cardIcon} style={{ background: 'var(--primary-light)', color: 'var(--primary)' }}>
-            <MdTrendingUp size={24} />
-          </div>
-          <div className={styles.kpiContent}>
-            <span className={styles.cardLabel}>Revenue &amp; Gross Profit</span>
-            <div className={styles.metricPeriod}>
-              <span className={styles.kpiSub}>Today</span>
-              <div className={styles.cardVal}>KES <strong>{Number(data.todayRevenue || 0).toLocaleString()}</strong></div>
-              <span className={styles.kpiSub}>Gross profit: <strong>KES {Number(data.todayGrossProfit || 0).toLocaleString()}</strong></span>
+        <div className={`${styles.kpiCard} ${styles.revenueSummaryCard}`}>
+          <div className={styles.kpiHeading}>
+            <div className={styles.cardIcon} style={{ background: 'var(--primary-light)', color: 'var(--primary)' }}>
+              <MdTrendingUp size={24} />
             </div>
-            <div className={styles.metricPeriod}>
-              <span className={styles.kpiSub}>This month</span>
-              <div className={styles.cardVal}>KES <strong>{Number(data.monthRevenue || 0).toLocaleString()}</strong></div>
-              <span className={styles.kpiSub}>Gross profit: <strong>KES {Number(data.monthGrossProfit || 0).toLocaleString()}</strong></span>
+            <span className={styles.cardLabel}>Revenue</span>
+          </div>
+          
+          <div className={`${styles.kpiContent} ${styles.revenueContent}`}>
+            <div className={styles.revenueToday}>
+              <span className={styles.periodTitle}>Today</span>
+              <div className={styles.revenueValue}>
+                <span>KES</span>
+                <strong>{Number(data.todayRevenue || 0).toLocaleString()}</strong>
+              </div>
+            </div>
+            <div className={styles.revenueMonth}>
+              <span>This month</span>
+              <strong>KES {Number(data.monthRevenue || 0).toLocaleString()}</strong>
             </div>
           </div>
         </div>
 
-        <div className={styles.kpiCard}>
-          <div className={styles.cardIcon} style={{ background: 'var(--success-bg)', color: 'var(--success-text)' }}>
-            <MdPointOfSale size={24} />
+        <div className={`${styles.kpiCard} ${styles.collectionSummaryCard}`}>
+          <div className={styles.kpiHeading}>
+            <div className={styles.cardIcon} style={{ background: 'var(--success-bg)', color: 'var(--success-text)' }}>
+              <MdPointOfSale size={24} />
+            </div>
+            <div className={styles.collectionHeadingText}>
+              <span className={styles.cardLabel}>Collections</span>
+              <span className={styles.collectionPeriodLabel}>Today</span>
+            </div>
           </div>
           <div className={styles.kpiContent}>
-            <span className={styles.cardLabel}>Actual collected today</span>
-            <div className={styles.cardVal}>KES <strong>{todayCollected.toLocaleString()}</strong></div>
             <div className={styles.collectionBreakdown}>
               <span>Cash <strong>KES {Number(data.todayCashCollected || 0).toLocaleString()}</strong></span>
               <span>M-Pesa <strong>KES {Number(data.todayMpesaCollected || 0).toLocaleString()}</strong></span>
@@ -142,23 +274,101 @@ export default function DashboardPage() {
         </div>
 
         <div className={styles.kpiCard}>
-          <div className={styles.cardIcon} style={{ background: 'var(--warning-bg)', color: 'var(--warning-text)' }}>
-            <MdCheckCircle size={24} />
-          </div>
-          <div className={styles.kpiContent}>
-            <span className={styles.cardLabel}>Net Profit</span>
-            <div className={styles.metricPeriod}>
-              <span className={styles.kpiSub}>Today</span>
-              <div className={styles.cardVal}>KES <strong>{Number(data.todayNetProfit || 0).toLocaleString()}</strong></div>
+          <div className={styles.kpiHeading}>
+            <div className={styles.cardIcon} style={{ background: 'var(--warning-bg)', color: 'var(--warning-text)' }}>
+              <MdCheckCircle size={24} />
             </div>
-            <div className={styles.metricPeriod}>
-              <span className={styles.kpiSub}>This month</span>
-              <div className={styles.cardVal}>KES <strong>{Number(data.monthNetProfit || 0).toLocaleString()}</strong></div>
+            <span className={styles.cardLabel}>Profitability</span>
+          </div>
+          <div className={`${styles.kpiContent} ${styles.profitPeriods}`}>
+            <div className={`${styles.metricPeriod} ${styles.profitPeriod}`}>
+              <span className={styles.periodTitle}>Today</span>
+              <div className={styles.profitMetric}>
+                <span className={styles.metricLabel}>Gross profit</span>
+                <div className={styles.cardVal}>KES <strong>{Number(data.todayGrossProfit || 0).toLocaleString()}</strong></div>
+              </div>
+              <div className={styles.profitMetric}>
+                <span className={styles.metricLabel}>Net profit</span>
+                <div className={styles.cardVal}>KES <strong>{Number(data.todayNetProfit || 0).toLocaleString()}</strong></div>
+              </div>
+            </div>
+            <div className={`${styles.metricPeriod} ${styles.profitPeriod}`}>
+              <span className={styles.periodTitle}>This month</span>
+              <div className={styles.profitMetric}>
+                <span className={styles.metricLabel}>Gross profit</span>
+                <div className={styles.cardVal}>KES <strong>{Number(data.monthGrossProfit || 0).toLocaleString()}</strong></div>
+              </div>
+              <div className={styles.profitMetric}>
+                <span className={styles.metricLabel}>Net profit</span>
+                <div className={styles.cardVal}>KES <strong>{Number(data.monthNetProfit || 0).toLocaleString()}</strong></div>
+              </div>
             </div>
           </div>
         </div>
 
       </div>
+
+      <section className={`${styles.sectionCard} ${styles.salesTrendCard}`} aria-labelledby="sales-trend-title">
+        <div className={styles.sectionHeader}>
+          <div>
+            <h2 id="sales-trend-title">Sales trend</h2>
+            <span className={styles.sectionSubtitle}>Daily revenue over time</span>
+          </div>
+          <div className={styles.trendRange} role="group" aria-label="Sales trend period">
+            {[7, 30].map(days => (
+              <button
+                key={days}
+                type="button"
+                className={salesTrendRange === days ? styles.trendRangeActive : ''}
+                aria-pressed={salesTrendRange === days}
+                onClick={() => setSalesTrendRange(days)}
+              >
+                {days} days
+              </button>
+            ))}
+          </div>
+        </div>
+        <div className={styles.salesTrendChart}>
+          {salesTrendLoading ? (
+            <div className={styles.trendEmptyState}>Loading sales trend...</div>
+          ) : salesTrend.maxTotal === 0 ? (
+            <div className={styles.trendEmptyState}>No sales recorded in this period.</div>
+          ) : (
+            <svg
+              className={styles.trendSvg}
+              viewBox="0 0 700 220"
+              role="img"
+              aria-label={`Sales revenue for the last ${salesTrendRange} days`}
+            >
+              <title>Sales revenue for the last {salesTrendRange} days</title>
+              {[0, 1, 2, 3].map(step => {
+                const y = 174 - step * (146 / 3);
+                const amount = salesTrend.chartMax * step / 3;
+                return (
+                  <g key={step}>
+                    <line x1="40" x2="690" y1={y} y2={y} className={styles.trendGridLine} />
+                    <text x="34" y={y + 4} textAnchor="end" className={styles.trendAxisLabel}>
+                      {amount >= 1000 ? `${(amount / 1000).toFixed(amount >= 10000 ? 0 : 1)}k` : Math.round(amount)}
+                    </text>
+                  </g>
+                );
+              })}
+              <path d={salesTrend.areaPath} className={styles.trendArea} />
+              <polyline points={salesTrend.linePath} className={styles.trendLine} />
+              {salesTrend.chartPoints.map(point => (
+                <circle key={point.key} cx={point.x} cy={point.y} r="3" className={styles.trendPoint}>
+                  <title>{point.date.toLocaleDateString()}: KES {Math.round(point.total).toLocaleString()}</title>
+                </circle>
+              ))}
+              {salesTrend.labels.map(point => (
+                <text key={`label-${point.key}`} x={point.x} y="205" textAnchor="middle" className={styles.trendAxisLabel}>
+                  {point.date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                </text>
+              ))}
+            </svg>
+          )}
+        </div>
+      </section>
 
       {/* Main Split Section: Recent Transactions + Low Stock Radar */}
       <div className={styles.splitGrid}>
@@ -237,7 +447,7 @@ export default function DashboardPage() {
         <div className={styles.sectionCard}>
           <div className={styles.sectionHeader}>
             <div>
-              <h2 style={{ whiteSpace: 'nowrap'}}>Critical Stock Watch</h2>
+              <h2>Stock health</h2>
             </div>
             <button className={styles.viewAllBtn} onClick={() => navigate('/products')}>
               <span>Manage All</span>
@@ -245,6 +455,51 @@ export default function DashboardPage() {
             </button>
           </div>
 
+          <div className={styles.stockChart}>
+            <div className={styles.stockChartHeading}>
+              <h3>Top sellers</h3>
+              <span>Current stock</span>
+            </div>
+            {salesTrendLoading || stockProductsLoading ? (
+              <div className={styles.stockChartEmpty}>Loading stock levels...</div>
+            ) : topSellingStock.length === 0 ? (
+              <div className={styles.stockChartEmpty}>No best-selling items to chart yet.</div>
+            ) : (
+              <div className={styles.stockChartRows}>
+                {topSellingStock.map(product => {
+                  const stockPercent = Math.min(100, (product.quantity / maxTopSellerStock) * 100);
+                  const isLowStock = product.quantity <= product.minStockLevel;
+                  const unitLabel = product.units.length === 1 ? product.units[0] : 'units';
+
+                  return (
+                    <div className={styles.stockChartRow} key={product.name}>
+                      <div className={styles.stockChartMeta}>
+                        <span className={styles.stockChartName} title={product.name}>{product.name}</span>
+                        <span className={`${styles.stockChartQuantity} ${isLowStock ? styles.stockChartQuantityLow : ''}`}>
+                          {product.quantity.toLocaleString()} {unitLabel}
+                        </span>
+                      </div>
+                      <div
+                        className={styles.stockChartTrack}
+                        role="img"
+                        aria-label={`${product.name}: ${product.quantity} ${unitLabel} in stock${isLowStock ? ', below minimum stock level' : ''}`}
+                      >
+                        <span
+                          className={`${styles.stockChartBar} ${isLowStock ? styles.stockChartBarLow : ''}`}
+                          style={{ width: `${stockPercent}%` }}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          <div className={styles.stockAlertsHeading}>
+            <h3>Low-stock alerts</h3>
+            <span>{data.lowStockCount || 0}</span>
+          </div>
           <div className={styles.lowStockList}>
             {(data.lowStockProducts || []).length === 0 ? (
               <div className={styles.healthyStockState}>

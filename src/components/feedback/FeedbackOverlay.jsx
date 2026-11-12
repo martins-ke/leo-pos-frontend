@@ -1,5 +1,7 @@
 import { useEffect, useRef } from 'react';
 import styles from './FeedbackOverlay.module.css';
+import Spinner from '../Spinner';
+import LoadingOverlay from '../LoadingOverlay';
 
 const MESSAGE_ICONS = {
   success: 'OK',
@@ -103,7 +105,7 @@ function Dialog({ dialog, onDismiss }) {
         onKeyDown={onKeyDown}
       >
         <div className={`${styles.dialogIcon} ${iconVariant}`}>
-          {isLoading ? <span className={styles.spinner} aria-hidden="true" /> : (
+          {isLoading ? <Spinner size="small" label={dialog.title} /> : (
             dialog.phase === 'error' ? '!' : isConfirmation ? '?' : 'OK'
           )}
         </div>
@@ -148,11 +150,14 @@ function Dialog({ dialog, onDismiss }) {
 export default function FeedbackOverlay({
   messages,
   dialog,
+  loadingLabel,
+  showRequestOverlay,
   onDismissMessage,
   onDismissDialog,
 }) {
   return (
     <>
+      {showRequestOverlay && <LoadingOverlay label={loadingLabel} />}
       <div className={styles.messageStack} aria-label="Notifications">
         {messages.map((message) => (
           <MessageCard key={message.id} message={message} onDismiss={onDismissMessage} />

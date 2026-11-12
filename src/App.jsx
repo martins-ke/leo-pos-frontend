@@ -5,6 +5,8 @@ import { ThemeProvider } from './context/ThemeContext';
 import { FeedbackProvider } from './context/FeedbackProvider';
 import { ProtectedRoute } from './components/routing/ProtectedRoute';
 import Layout from './components/layout/Layout'; 
+import Spinner from './components/Spinner';
+import LoadingOverlay from './components/LoadingOverlay';
 
 const LandingPage = lazy(() => import('./features/LandingPage'));
 const LoginPage = lazy(() => import('./features/auth/LoginPage'));
@@ -29,8 +31,18 @@ export default function App() {
       <FeedbackProvider>
         <AuthProvider>
           <BrowserRouter>
-            <Suspense fallback={<div role="status" aria-live="polite" style={{ minHeight: '100vh', display: 'grid', placeItems: 'center' }}>Loading page...</div>}>
+            <Suspense fallback={<LoadingOverlay label="Loading page" />}>
               <Routes>
+              {import.meta.env.DEV && (
+                <Route
+                  path="/spinner-preview"
+                  element={(
+                    <main style={{ minHeight: '100vh', display: 'grid', placeItems: 'center' }}>
+                      <Spinner label="Loading" />
+                    </main>
+                  )}
+                />
+              )}
               {/* Public Routes */}
               <Route path="/" element={<LandingPage />} />
               <Route path="/login" element={<LoginPage />} />

@@ -1,4 +1,13 @@
 const BASE_URL = import.meta.env?.VITE_API_BASE_URL ?? 'http://localhost:8181';
+const REQUEST_STARTED = 'leo-api-request-start';
+const REQUEST_FINISHED = 'leo-api-request-finish';
+let nextRequestId = 0;
+
+const dispatchRequestEvent = (name, detail) => {
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent(name, { detail }));
+  }
+};
 
 const getHeaders = ()=> { 
   const token = localStorage.getItem('leo_token');
@@ -23,12 +32,23 @@ const handleResponse = async (res) => {
   }
 };
 
+const request = async (path, options, label) => {
+  const id = ++nextRequestId;
+  dispatchRequestEvent(REQUEST_STARTED, { id, label });
+  try {
+    const response = await fetch(`${BASE_URL}${path}`, options);
+    return await handleResponse(response);
+  } finally {
+    dispatchRequestEvent(REQUEST_FINISHED, { id });
+  }
+};
+
 export const api = {
   get: (path) =>
-    fetch(`${BASE_URL}${path}`, { headers: getHeaders() }).then(handleResponse),
+    request(path, { headers: getHeaders() }, 'Loading data'),
 
-  post: (path, body) =>
-    fetch(`${BASE_URL}${path}`, {
+  post: (path, body, label = 'Saving') =>
+    request(path, {
       method: 'POST',
       headers: {
         ...getHeaders(),
@@ -36,25 +56,25 @@ export const api = {
           || `${Date.now()}-${Math.random().toString(36).slice(2)}`,
       },
       body: body ? JSON.stringify(body) : undefined,
-    }).then(handleResponse),
+    }, label),
 
   put: (path, body) =>
-    fetch(`${BASE_URL}${path}`, {
+    request(path, {
       method: 'PUT',
       headers: getHeaders(),
       body: body ? JSON.stringify(body) : undefined,
-    }).then(handleResponse),
+    }, 'Saving'),
 
   patch: (path, body) =>
-    fetch(`${BASE_URL}${path}`, {
+    request(path, {
       method: 'PATCH',
       headers: getHeaders(),
       body: body ? JSON.stringify(body) : undefined,
-    }).then(handleResponse),
+    }, 'Saving'),
 
   delete: (path) =>
-    fetch(`${BASE_URL}${path}`, {
+    request(path, {
       method: 'DELETE',
       headers: getHeaders(),
-    }).then(handleResponse),
+    }, 'Saving'),
 };
