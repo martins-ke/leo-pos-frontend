@@ -88,10 +88,6 @@
   line-height: 1;
 }
 
-.mobileLogoDot {
-  color: #ff6a00;
-}
-
 .topbarRight {
   display: flex;
   align-items: center;
@@ -114,7 +110,7 @@
 
 .themeToggleBtn:hover {
   background: var(--border-strong);
-  transform: rotate(15deg);
+  transform: rotate(15deg) scale(1.05);
 }
 
 /* Date on far right with distinct appealing color */
@@ -187,14 +183,18 @@
   }
 
   .themeToggleBtn {
-    width: 2.5rem;
-    height: 2.5rem;
+    width: 1.75rem;
+    height: 1.75rem;
     padding: 0;
   }
 
   .dateBadge {
     font-size: var(--font-size-xs);
     letter-spacing: 0;
+  }
+
+  .dateBadge >span {
+    font-size: 14px;
   }
 
   .main {

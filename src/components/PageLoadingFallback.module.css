@@ -1,0 +1,162 @@
+.page {
+  min-height: 100vh;
+  box-sizing: border-box;
+  padding: clamp(1rem, 4vw, 3rem);
+  background: var(--bg-app);
+}
+
+.shell {
+  width: min(100%, 90rem);
+  margin: 0 auto;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 3.5rem;
+  padding-bottom: var(--space-4);
+  border-bottom: var(--border-width) solid var(--border-subtle);
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  padding-top: var(--space-6);
+}
+
+.intro {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.block {
+  display: block;
+  border-radius: var(--radius-sm);
+  background: linear-gradient(
+    90deg,
+    var(--bg-subtle) 25%,
+    var(--border-subtle) 50%,
+    var(--bg-subtle) 75%
+  );
+  background-size: 200% 100%;
+  animation: pageSkeletonPulse 1.4s ease-in-out infinite;
+}
+
+.brand {
+  width: 7rem;
+  height: 1.75rem;
+}
+
+.headerAction {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+}
+
+.title {
+  width: min(14rem, 65vw);
+  height: 2rem;
+}
+
+.subtitle {
+  width: min(28rem, 80vw);
+  height: 0.9rem;
+}
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-4);
+}
+
+.card,
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border: var(--border-width) solid var(--border-default);
+  border-radius: var(--radius-xl);
+  background: var(--bg-surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.card {
+  min-height: 7rem;
+}
+
+.cardLabel {
+  width: 42%;
+  height: 0.85rem;
+}
+
+.cardValue {
+  width: 68%;
+  height: 1.75rem;
+}
+
+.cardDetail {
+  width: 52%;
+  height: 0.85rem;
+}
+
+.panels {
+  display: grid;
+  grid-template-columns: 1.6fr 1fr;
+  gap: var(--space-4);
+}
+
+.panel {
+  min-height: 13rem;
+}
+
+.panelTitle {
+  width: 40%;
+  height: 1.1rem;
+  margin-bottom: var(--space-2);
+}
+
+.panelContent {
+  width: 100%;
+  flex: 1;
+}
+
+.panelRow {
+  width: 100%;
+  height: 2rem;
+}
+
+.visuallyHidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  clip-path: inset(50%);
+}
+
+@keyframes pageSkeletonPulse {
+  to {
+    background-position-x: -200%;
+  }
+}
+
+@media (max-width: 700px) {
+  .cards {
+    grid-template-columns: 1fr;
+  }
+
+  .panels {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .block {
+    animation: none;
+  }
+}

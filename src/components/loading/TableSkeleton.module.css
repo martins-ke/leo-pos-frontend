@@ -1,0 +1,30 @@
+.skeletonRow td {
+  padding: var(--space-3) var(--space-4);
+  vertical-align: middle;
+}
+
+.skeletonCell {
+  display: block;
+  height: 1.15rem;
+  border-radius: var(--radius-sm);
+  background: linear-gradient(
+    90deg,
+    var(--bg-subtle) 25%,
+    var(--border-subtle) 50%,
+    var(--bg-subtle) 75%
+  );
+  background-size: 200% 100%;
+  animation: tableSkeletonPulse 1.4s ease-in-out infinite;
+}
+
+@keyframes tableSkeletonPulse {
+  to {
+    background-position-x: -200%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeletonCell {
+    animation: none;
+  }
+}

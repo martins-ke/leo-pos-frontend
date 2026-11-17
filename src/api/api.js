@@ -34,18 +34,18 @@ const handleResponse = async (res) => {
 
 const request = async (path, options, label) => {
   const id = ++nextRequestId;
-  dispatchRequestEvent(REQUEST_STARTED, { id, label });
+  if (label) dispatchRequestEvent(REQUEST_STARTED, { id, label });
   try {
     const response = await fetch(`${BASE_URL}${path}`, options);
     return await handleResponse(response);
   } finally {
-    dispatchRequestEvent(REQUEST_FINISHED, { id });
+    if (label) dispatchRequestEvent(REQUEST_FINISHED, { id });
   }
 };
 
 export const api = {
-  get: (path) =>
-    request(path, { headers: getHeaders() }, 'Loading data'),
+  get: (path, { showLoading = false } = {}) =>
+    request(path, { headers: getHeaders() }, showLoading ? 'Loading data' : null),
 
   post: (path, body, label = 'Saving') =>
     request(path, {

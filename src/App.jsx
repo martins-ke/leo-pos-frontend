@@ -6,7 +6,7 @@ import { FeedbackProvider } from './context/FeedbackProvider';
 import { ProtectedRoute } from './components/routing/ProtectedRoute';
 import Layout from './components/layout/Layout'; 
 import Spinner from './components/Spinner';
-import LoadingOverlay from './components/LoadingOverlay';
+import PageLoadingFallback from './components/PageLoadingFallback';
 
 const LandingPage = lazy(() => import('./features/LandingPage'));
 const LoginPage = lazy(() => import('./features/auth/LoginPage'));
@@ -31,7 +31,7 @@ export default function App() {
       <FeedbackProvider>
         <AuthProvider>
           <BrowserRouter>
-            <Suspense fallback={<LoadingOverlay label="Loading page" />}>
+            <Suspense fallback={<PageLoadingFallback />}>
               <Routes>
               {import.meta.env.DEV && (
                 <Route

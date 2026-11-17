@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import { api } from '../../api/api';
+import TableSkeleton from '../../components/loading/TableSkeleton';
+import { useDelayedLoading } from '../../components/loading/useDelayedLoading';
 import {
   MdBusiness, MdStore, MdPointOfSale, MdSearch, MdRefresh, MdTrendingUp
 } from 'react-icons/md';
@@ -15,6 +17,7 @@ export default function AdminTenantsPage() {
   const [tenants, setTenants] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
+  const showTableSkeleton = useDelayedLoading(loading, 200);
   const [page, setPage] = useState(0);
 
   const loadData = async () => {
@@ -79,11 +82,11 @@ export default function AdminTenantsPage() {
       {/* Header */}
       <div className={styles.headerRow}>
         <div>
-          <h1 className={styles.h1}>SaaS Customer & Tenant Manager</h1>
+          <h1 className={styles.h1}>Customer & Tenant management</h1>
           <p>Monitor subscribed businesses, manage store owner licenses, and review platform-wide throughput</p>
         </div>
         <button className={styles.launchPosBtn} onClick={loadData} disabled={loading}>
-          <MdRefresh size={18} />
+          <MdRefresh size={18} className={loading ? styles.spinIcon : ''} />
           <span>Refresh Metrics</span>
         </button>
       </div>
@@ -162,10 +165,12 @@ export default function AdminTenantsPage() {
               </tr>
             </thead>
             <tbody>
-              {filtered.length === 0 ? (
+              {loading && showTableSkeleton ? (
+                <TableSkeleton rows={6} columns={6} />
+              ) : filtered.length === 0 ? (
                 <tr>
                   <td colSpan="6" className={styles.emptyTable}>
-                    {loading ? 'Loading business subscribers...' : 'No business clients found.'}
+                    {loading ? '' : 'No business clients found.'}
                   </td>
                 </tr>
               ) : (

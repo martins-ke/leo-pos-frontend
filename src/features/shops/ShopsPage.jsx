@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { api } from '../../api/api';
 import { useNavigate } from 'react-router-dom';
+import { useDelayedLoading } from '../../components/loading/useDelayedLoading';
 import {
   MdAdd, MdStore, MdLocationOn, MdPointOfSale,
   MdDelete, MdBusiness
@@ -23,6 +24,7 @@ export default function ShopsPage() {
   const [formStep, setFormStep] = useState(0);
   const [form, setForm] = useState({ name: '', type: 'Retail', location: '', description: '' });
   const [loading, setLoading] = useState(true);
+  const showSkeleton = useDelayedLoading(loading, 200);
   const [page, setPage] = useState(0);
 
   const showAlert = (type, text) => {
@@ -121,26 +123,33 @@ export default function ShopsPage() {
 
       {/* Outlets Grid */}
       <div className={styles.outletGrid}>
-        {shops.length === 0 ? (
+        {loading && showSkeleton ? (
+          [0, 1, 2].map(idx => (
+            <div key={idx} className={`${styles.sectionCard} ${styles.outletCard} ${sharedStyles.skeletonCard}`} style={{ gap: '12px' }}>
+              <span className={`${sharedStyles.skeletonBlock} ${sharedStyles.skeletonHeading}`} style={{ width: '60%' }} />
+              <span className={`${sharedStyles.skeletonBlock} ${sharedStyles.skeletonSubtitle}`} style={{ width: '40%' }} />
+              <div style={{ marginTop: 'auto', display: 'flex', gap: '8px', paddingTop: '12px' }}>
+                <span className={sharedStyles.skeletonBlock} style={{ width: '80px', height: '32px' }} />
+                <span className={sharedStyles.skeletonBlock} style={{ width: '80px', height: '32px' }} />
+              </div>
+            </div>
+          ))
+        ) : shops.length === 0 ? (
           <div className={styles.sectionCard} style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '48px 20px' }}>
             <MdBusiness size={48} style={{ color: 'var(--text-muted)', margin: '0 auto 12px' }} />
-            <h3 style={{ margin: '0 0 6px', color: 'var(--text-main)' }}>{loading ? 'Loading outlets...' : 'No Shop Outlets Configured'}</h3>
-            {!loading && (
-              <>
-                <p style={{ color: 'var(--text-muted)', fontSize: 'var(--font-size-base)', margin: '0 0 16px' }}>Create your first store branch or retail outlet to begin managing stock.</p>
-                <button
-                  className={styles.launchPosBtn}
-                  onClick={() => {
-                    setFormStep(0);
-                    setShowModal(true);
-                  }}
-                  style={{ margin: '0 auto' }}
-                >
-                  <MdAdd size={18} />
-                  <span>Create First Outlet</span>
-                </button>
-              </>
-            )}
+            <h3 style={{ margin: '0 0 6px', color: 'var(--text-main)' }}>No Shop Outlets Configured</h3>
+            <p style={{ color: 'var(--text-muted)', fontSize: 'var(--font-size-base)', margin: '0 0 16px' }}>Create your first store branch or retail outlet to begin managing stock.</p>
+            <button
+              className={styles.launchPosBtn}
+              onClick={() => {
+                setFormStep(0);
+                setShowModal(true);
+              }}
+              style={{ margin: '0 auto' }}
+            >
+              <MdAdd size={18} />
+              <span>Create First Outlet</span>
+            </button>
           </div>
         ) : (
           visibleShops.map(s => (

@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { api } from '../../api/api';
+import { invalidateDashboardData } from '../../api/queryClient';
 import { useAuth } from '../../context/useAuth';
 import PaginationControls from '../../components/navigation/PaginationControls';
 import { useFeedback } from '../../context/useFeedback';
@@ -37,6 +38,7 @@ export default function PosPage() {
   const [lastSale, setLastSale] = useState(null);
   const [loading, setLoading] = useState(false);
   const [voiceEnabled, setVoiceEnabled] = useState(() => getVoiceFeatureFlag());
+  const [mobileCartOpen, setMobileCartOpen] = useState(false);
   const searchInputRef = useRef(null);
 
   // Load shops and initial products
@@ -121,6 +123,11 @@ export default function PosPage() {
     };
   }, [selectedShopId, customerPage]);
 
+  // Auto-focus search on mount — barcode scanner ready immediately
+  useEffect(() => {
+    searchInputRef.current?.focus();
+  }, []);
+
   // Keyboard shortcut: '/' to focus search
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -159,6 +166,11 @@ export default function PosPage() {
       ]);
     } else {
       setCart([{ ...product, qty: step }, ...cart]);
+    }
+
+    // Refocus search for scanner workflow — desktop only (touch would open keyboard)
+    if (typeof window !== 'undefined' && window.matchMedia('(pointer: fine)').matches) {
+      searchInputRef.current?.focus();
     }
   };
 
@@ -252,12 +264,13 @@ export default function PosPage() {
         setCart([]);
         setAmountTendered('');
         setRecordAsDebt(false);
+        setMobileCartOpen(false);
         saveStatus.complete({
           title: asDebt ? 'Debt sale recorded' : 'Sale complete',
           message: `Receipt #${res.body.receiptNumber || res.body.id}`,
         });
-        // Refresh product stock
         loadProducts();
+        invalidateDashboardData();
       } else {
         saveStatus.fail({ message: res.message || 'Checkout failed. Please verify stock.' });
       }
@@ -304,6 +317,7 @@ export default function PosPage() {
         setCart([]);
         setAmountTendered('');
         loadProducts();
+        invalidateDashboardData();
         return {
           success: true,
           receiptNumber: res.body.receiptNumber || res.body.id,
@@ -322,7 +336,6 @@ export default function PosPage() {
     }
   };
 
-  // Completely decoupled Voice Assistant module hook
   const voice = useVoiceAssistant({
     products,
     cart,
@@ -341,7 +354,6 @@ export default function PosPage() {
     },
   });
 
-  // Filter products by search & category
   const filteredProducts = products.filter(p => {
     const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase());
     return matchesSearch;
@@ -548,18 +560,34 @@ export default function PosPage() {
           />
         </div>
 
-        {/* Right Column: Order Checkout Ticket */}
-        <div className={styles.checkoutPanel}>
+        {/* Mobile Backdrop */}
+        <div
+          className={`${styles.mobileBackdrop} ${mobileCartOpen ? styles.mobileBackdropOpen : ''}`}
+          onClick={() => setMobileCartOpen(false)}
+          aria-hidden="true"
+        />
+
+        {/* Right Column: Order Checkout Ticket (mobile drawer) */}
+        <div className={`${styles.checkoutPanel} ${mobileCartOpen ? styles.checkoutPanelOpen : ''}`}>
           <div className={styles.checkoutHeader}>
             <div>
               <h2>Current Ticket</h2>
               <span className={styles.ticketCount}>{cart.length} unique item{cart.length !== 1 ? 's' : ''}</span>
             </div>
-            {cart.length > 0 && (
-              <button className={styles.clearCartBtn} onClick={clearCart}>
-                Clear
+            <div className={styles.checkoutHeaderActions}>
+              {cart.length > 0 && (
+                <button className={styles.clearCartBtn} onClick={clearCart}>
+                  Clear
+                </button>
+              )}
+              <button
+                className={styles.mobileCartClose}
+                onClick={() => setMobileCartOpen(false)}
+                aria-label="Close cart"
+              >
+                <MdClose size={20} />
               </button>
-            )}
+            </div>
           </div>
 
           <div className={styles.cartList}>
@@ -589,8 +617,9 @@ export default function PosPage() {
                       <button
                         className={styles.qtyBtn}
                         onClick={() => updateQty(item.id, item.qty - step)}
+                        aria-label={`Decrease ${item.name}`}
                       >
-                        -
+                        −
                       </button>
                       <input
                         type="number"
@@ -603,6 +632,7 @@ export default function PosPage() {
                       <button
                         className={styles.qtyBtn}
                         onClick={() => updateQty(item.id, item.qty + step)}
+                        aria-label={`Increase ${item.name}`}
                       >
                         +
                       </button>
@@ -616,6 +646,7 @@ export default function PosPage() {
                       className={styles.removeLineBtn}
                       onClick={() => removeFromCart(item.id)}
                       title="Remove item"
+                      aria-label={`Remove ${item.name}`}
                     >
                       <MdDelete size={17} />
                     </button>
@@ -625,64 +656,63 @@ export default function PosPage() {
             )}
           </div>
 
-          {/* Checkout Controls */}
+          {/* Checkout Controls — pinned footer */}
           <div className={styles.checkoutFooter}>
-            {/* Payment Method Selector */}
-            {!recordAsDebt && <div className={styles.methodSelector}>
-              <button
-                type="button"
-                className={`${styles.methodBtn} ${paymentMethod === 'CASH' ? styles.methodActive : ''}`}
-                onClick={() => setPaymentMethod('CASH')}
-              >
-                <MdPayments size={18} />
-                <span>Cash</span>
-              </button>
-              <button
-                type="button"
-                className={`${styles.methodBtn} ${paymentMethod === 'MPESA' ? styles.methodActive : ''}`}
-                onClick={() => {
-                  setPaymentMethod('MPESA');
-                  setAmountTendered(grandTotal.toString());
-                }}
-              >
-                <MdPhoneIphone size={18} />
-                <span>M-Pesa</span>
-              </button>
-              <button
-                type="button"
-                className={`${styles.methodBtn} ${paymentMethod === 'CARD' ? styles.methodActive : ''}`}
-                onClick={() => {
-                  setPaymentMethod('CARD');
-                  setAmountTendered(grandTotal.toString());
-                }}
-              >
-                <MdCreditCard size={18} />
-                <span>Card</span>
-              </button>
-            </div>}
-
-            {/* Cash Shortcuts (only shown when Cash method selected) */}
-            {!recordAsDebt && paymentMethod === 'CASH' && (
-              <div className={styles.cashPresets}>
-                <button type="button" onClick={() => handleQuickCash('EXACT')}>Exact</button>
-                <button type="button" onClick={() => handleQuickCash(50)}>KES 50</button>
-                <button type="button" onClick={() => handleQuickCash(100)}>KES 100</button>
-                <button type="button" onClick={() => handleQuickCash(200)}>KES 200</button>
-                <button type="button" onClick={() => handleQuickCash(500)}>KES 500</button>
+            {!recordAsDebt && (
+              <div className={styles.methodSelector}>
+                <button
+                  type="button"
+                  className={`${styles.methodBtn} ${paymentMethod === 'CASH' ? styles.methodActive : ''}`}
+                  onClick={() => setPaymentMethod('CASH')}
+                >
+                  <MdPayments size={18} />
+                  <span>Cash</span>
+                </button>
+                <button
+                  type="button"
+                  className={`${styles.methodBtn} ${paymentMethod === 'MPESA' ? styles.methodActive : ''}`}
+                  onClick={() => {
+                    setPaymentMethod('MPESA');
+                    setAmountTendered(grandTotal.toString());
+                  }}
+                >
+                  <MdPhoneIphone size={18} />
+                  <span>M-Pesa</span>
+                </button>
+                <button
+                  type="button"
+                  className={`${styles.methodBtn} ${paymentMethod === 'CARD' ? styles.methodActive : ''}`}
+                  onClick={() => {
+                    setPaymentMethod('CARD');
+                    setAmountTendered(grandTotal.toString());
+                  }}
+                >
+                  <MdCreditCard size={18} />
+                  <span>Card</span>
+                </button>
               </div>
             )}
 
-            {/* Totals & Tendered Inputs */}
+            {!recordAsDebt && paymentMethod === 'CASH' && (
+              <div className={styles.cashPresets}>
+                <button type="button" onClick={() => handleQuickCash('EXACT')}>Exact</button>
+                <button type="button" onClick={() => handleQuickCash(50)}>50</button>
+                <button type="button" onClick={() => handleQuickCash(100)}>100</button>
+                <button type="button" onClick={() => handleQuickCash(200)}>200</button>
+                <button type="button" onClick={() => handleQuickCash(500)}>500</button>
+              </div>
+            )}
+
             <div className={styles.summaryBox}>
               <div className={styles.totalRow}>
-                <span>TOTAL DUE:</span>
+                <span>TOTAL DUE</span>
                 <span className={styles.totalValue}>KES {grandTotal.toLocaleString()}</span>
               </div>
 
               {!recordAsDebt && paymentMethod === 'CASH' && (
                 <>
                   <div className={styles.tenderRow}>
-                    <label>Amount Tendered:</label>
+                    <label>Amount Tendered</label>
                     <div className={styles.tenderInputWrap}>
                       <span>KES</span>
                       <input
@@ -694,14 +724,13 @@ export default function PosPage() {
                     </div>
                   </div>
                   <div className={styles.changeRow}>
-                    <span>Change Due:</span>
+                    <span>Change Due</span>
                     <span className={styles.changeValue}>KES {changeGiven.toLocaleString()}</span>
                   </div>
                 </>
               )}
             </div>
 
-            {/* Pay Button */}
             {recordAsDebt ? (
               <>
                 <div className={styles.debtCheckoutNotice}>
@@ -709,7 +738,12 @@ export default function PosPage() {
                   {selectedCustomerCreditEligible ? '' : ' Select a credit-approved customer to continue.'}
                 </div>
                 <div className={styles.checkoutActions}>
-                  <button type="button" className={styles.debtCancelBtn} onClick={() => setRecordAsDebt(false)} disabled={loading}>
+                  <button
+                    type="button"
+                    className={styles.debtCancelBtn}
+                    onClick={() => setRecordAsDebt(false)}
+                    disabled={loading}
+                  >
                     Cancel
                   </button>
                   <button
@@ -718,7 +752,14 @@ export default function PosPage() {
                     onClick={() => handleCheckout(true)}
                     disabled={cart.length === 0 || loading || !selectedCustomerId || !selectedCustomerCreditEligible}
                   >
-                    {loading ? 'Recording debt...' : `Complete as debt (KES ${grandTotal.toLocaleString()})`}
+                    {loading ? (
+                      <>
+                        <span className={styles.spinner} />
+                        Recording…
+                      </>
+                    ) : (
+                      `Record Debt · KES ${grandTotal.toLocaleString()}`
+                    )}
                   </button>
                 </div>
               </>
@@ -730,7 +771,14 @@ export default function PosPage() {
                   onClick={() => handleCheckout(false)}
                   disabled={cart.length === 0 || loading}
                 >
-                  {loading ? 'Processing Transaction...' : `Complete Sale (KES ${grandTotal.toLocaleString()})`}
+                  {loading ? (
+                    <>
+                      <span className={styles.spinner} />
+                      Processing…
+                    </>
+                  ) : (
+                    `COMPLETE SALE: KES ${grandTotal.toLocaleString()}`
+                  )}
                 </button>
                 <button
                   type="button"
@@ -739,7 +787,7 @@ export default function PosPage() {
                   disabled={cart.length === 0 || loading}
                   aria-pressed={false}
                 >
-                  Record as debt
+                  Debt
                 </button>
               </div>
             )}
@@ -747,7 +795,23 @@ export default function PosPage() {
         </div>
       </div>
 
-      {/* Professional Receipt Modal */}
+      {/* Sticky mobile cart bar */}
+      {cart.length > 0 && !mobileCartOpen && (
+        <button
+          type="button"
+          className={styles.mobileCartBar}
+          onClick={() => setMobileCartOpen(true)}
+          aria-label={`View cart, ${cart.length} items, total KES ${grandTotal.toLocaleString()}`}
+        >
+          <span className={styles.mobileCartCount}>
+            {cart.length} item{cart.length !== 1 ? 's' : ''}
+          </span>
+          <span className={styles.mobileCartTotal}>KES {grandTotal.toLocaleString()}</span>
+          <span className={styles.mobileCartView}>View Cart →</span>
+        </button>
+      )}
+
+      {/* Receipt Modal (unchanged) */}
       {lastSale && (
         <div className={styles.receiptOverlay}>
           <div className={styles.receiptModal}>
@@ -758,7 +822,6 @@ export default function PosPage() {
               </button>
             </div>
 
-            {/* Printable Thermal Receipt Card */}
             <div className={`receipt-printable ${styles.receiptPaper}`}>
               <div className={styles.receiptCenter}>
                 <div className={styles.receiptLogo}>LEO POS</div>
@@ -798,13 +861,13 @@ export default function PosPage() {
               <div className={styles.receiptDivider}>================================</div>
 
               <div className={styles.receiptTotals}>
-                <div className={styles.rRow}><strong>TOTAL:</strong> <strong>KES {lastSale.grandTotal?.toLocaleString()}</strong></div>
+                <div className={styles.rRow}><strong>TOTAL</strong> <strong>KES {lastSale.grandTotal?.toLocaleString()}</strong></div>
                 {lastSale.paymentMethod === 'DEBT' ? (
-                  <div className={styles.rRow}><span>Amount owed:</span> <span>KES {Number(lastSale.grandTotal).toLocaleString()}</span></div>
+                  <div className={styles.rRow}><span>Amount owed</span> <span>KES {Number(lastSale.grandTotal).toLocaleString()}</span></div>
                 ) : (
                   <>
-                    <div className={styles.rRow}><span>Paid ({lastSale.paymentMethod}):</span> <span>KES {lastSale.amountTendered?.toLocaleString()}</span></div>
-                    <div className={styles.rRow}><span>Change:</span> <span>KES {lastSale.changeGiven?.toLocaleString()}</span></div>
+                    <div className={styles.rRow}><span>Paid ({lastSale.paymentMethod})</span> <span>KES {lastSale.amountTendered?.toLocaleString()}</span></div>
+                    <div className={styles.rRow}><span>Change</span> <span>KES {lastSale.changeGiven?.toLocaleString()}</span></div>
                   </>
                 )}
               </div>

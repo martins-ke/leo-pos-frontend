@@ -3,13 +3,18 @@ import { FeedbackContext } from './FeedbackContext';
 import FeedbackOverlay from '../components/feedback/FeedbackOverlay';
 
 const DEFAULT_MESSAGE_DURATION = 6000;
+const REQUEST_OVERLAY_SHOW_DELAY = 120;
+const REQUEST_OVERLAY_HIDE_DELAY = 250;
 
 export function FeedbackProvider({ children }) {
   const [messages, setMessages] = useState([]);
   const [dialog, setDialog] = useState(null);
   const [pendingRequests, setPendingRequests] = useState([]);
+  const [showRequestOverlay, setShowRequestOverlay] = useState(false);
   const dialogRef = useRef(null);
   const nextId = useRef(0);
+  const requestOverlayShowTimer = useRef(null);
+  const requestOverlayHideTimer = useRef(null);
 
   useEffect(() => {
     const onRequestStarted = (event) => {
@@ -25,6 +30,40 @@ export function FeedbackProvider({ children }) {
       window.removeEventListener('leo-api-request-start', onRequestStarted);
       window.removeEventListener('leo-api-request-finish', onRequestFinished);
     };
+  }, []);
+
+  useEffect(() => {
+    if (pendingRequests.length > 0) {
+      if (requestOverlayHideTimer.current) {
+        window.clearTimeout(requestOverlayHideTimer.current);
+        requestOverlayHideTimer.current = null;
+      }
+
+      if (!showRequestOverlay && !requestOverlayShowTimer.current) {
+        requestOverlayShowTimer.current = window.setTimeout(() => {
+          requestOverlayShowTimer.current = null;
+          setShowRequestOverlay(true);
+        }, REQUEST_OVERLAY_SHOW_DELAY);
+      }
+      return;
+    }
+
+    if (requestOverlayShowTimer.current) {
+      window.clearTimeout(requestOverlayShowTimer.current);
+      requestOverlayShowTimer.current = null;
+    }
+
+    if (showRequestOverlay && !requestOverlayHideTimer.current) {
+      requestOverlayHideTimer.current = window.setTimeout(() => {
+        requestOverlayHideTimer.current = null;
+        setShowRequestOverlay(false);
+      }, REQUEST_OVERLAY_HIDE_DELAY);
+    }
+  }, [pendingRequests.length, showRequestOverlay]);
+
+  useEffect(() => () => {
+    if (requestOverlayShowTimer.current) window.clearTimeout(requestOverlayShowTimer.current);
+    if (requestOverlayHideTimer.current) window.clearTimeout(requestOverlayHideTimer.current);
   }, []);
 
   const replaceDialog = useCallback((nextDialog) => {
@@ -158,7 +197,7 @@ export function FeedbackProvider({ children }) {
         messages={messages}
         dialog={dialog}
         loadingLabel={loadingLabel}
-        showRequestOverlay={pendingRequests.length > 0}
+        showRequestOverlay={showRequestOverlay}
         onDismissMessage={dismissMessage}
         onDismissDialog={dismissDialog}
       />

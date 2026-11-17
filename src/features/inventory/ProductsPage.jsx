@@ -1,5 +1,9 @@
 import { useState, useEffect } from 'react';
 import { api } from '../../api/api';
+import { invalidateDashboardData } from '../../api/queryClient';
+import TableSkeleton from '../../components/loading/TableSkeleton';
+import ButtonSpinner from '../../components/loading/ButtonSpinner';
+import { useDelayedLoading } from '../../components/loading/useDelayedLoading';
 import {
   MdAdd, MdWarning, MdSearch, MdEdit, MdDelete,
   MdAddCircleOutline, MdClose, MdStore,
@@ -52,6 +56,8 @@ export default function ProductsPage() {
 
   // Alerts
   const [loading, setLoading] = useState(false);
+  const [restocking, setRestocking] = useState(false);
+  const showTableSkeleton = useDelayedLoading(loading, 200);
 
   const showAlert = (type, text) => {
     notify({ type, message: text });
@@ -195,6 +201,7 @@ export default function ProductsPage() {
           setShowAddModal(false);
           setForm(initialForm);
           fetchProducts();
+          invalidateDashboardData();
         } else {
           saveStatus.fail({ message: res.message || 'Could not update the product.' });
         }
@@ -206,6 +213,7 @@ export default function ProductsPage() {
           setShowAddModal(false);
           setForm(initialForm);
           fetchProducts();
+          invalidateDashboardData();
         } else {
           saveStatus.fail({ message: res.message || 'Could not create the product.' });
         }
@@ -222,6 +230,7 @@ export default function ProductsPage() {
       showAlert('error', 'Please enter a valid positive quantity');
       return;
     }
+    setRestocking(true);
     const saveStatus = beginSaving({ title: 'Restocking product' });
     try {
       const res = await api.patch(`/products/${restockProduct.id}/stock?quantity=${qty}`);
@@ -230,11 +239,14 @@ export default function ProductsPage() {
         setRestockProduct(null);
         setRestockQty('');
         fetchProducts();
+        invalidateDashboardData();
       } else {
         saveStatus.fail({ message: res.message || 'Could not restock this product.' });
       }
     } catch {
       saveStatus.fail({ message: 'Could not connect to the server while restocking.' });
+    } finally {
+      setRestocking(false);
     }
   };
 
@@ -252,6 +264,7 @@ export default function ProductsPage() {
       if (res.success) {
         saveStatus.complete({ message: `Product "${name}" was deactivated.` });
         fetchProducts();
+        invalidateDashboardData();
       } else {
         saveStatus.fail({ message: res.message || 'Could not deactivate this product.' });
       }
@@ -465,10 +478,12 @@ export default function ProductsPage() {
               </tr>
             </thead>
             <tbody>
-              {filteredProducts.length === 0 ? (
+              {loading && showTableSkeleton ? (
+                <TableSkeleton rows={8} columns={10} />
+              ) : filteredProducts.length === 0 ? (
                 <tr>
                   <td colSpan="10" className={styles.emptyTable}>
-                    {loading ? 'Loading catalog items...' : 'No products found. Click "Add New Product" to populate your catalog!'}
+                    {loading ? '' : 'No products found. Click "Add New Product" to populate your catalog!'}
                   </td>
                 </tr>
               ) : (
@@ -722,9 +737,11 @@ export default function ProductsPage() {
                 <button
                   type="submit"
                   className={styles.launchPosBtn}
-                  style={{ background: 'var(--success)' }}
+                  style={{ background: 'var(--success)', display: 'inline-flex', alignItems: 'center', gap: '8px' }}
+                  disabled={restocking}
                 >
-                  Confirm Restock
+                  {restocking && <ButtonSpinner ariaLabel="Restocking..." />}
+                  <span>{restocking ? 'Restocking...' : 'Confirm Restock'}</span>
                 </button>
               </div>
             </form>

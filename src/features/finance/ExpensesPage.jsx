@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { api } from '../../api/api';
+import { invalidateDashboardData } from '../../api/queryClient';
 import FormWizard from '../../components/forms/FormWizard';
 import ExpandingSelect from '../../components/forms/ExpandingSelect';
 import PaginationControls from '../../components/navigation/PaginationControls';
@@ -72,6 +73,7 @@ export default function ExpensesPage() {
       setWizardOpen(false);
       setWizardStep(0);
       load();
+      invalidateDashboardData();
     } catch {
       saveStatus.fail({ message: 'Could not connect to the server while recording the expense.' });
     }

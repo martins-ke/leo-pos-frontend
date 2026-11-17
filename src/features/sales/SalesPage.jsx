@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import { api } from '../../api/api';
+import TableSkeleton from '../../components/loading/TableSkeleton';
+import { useDelayedLoading } from '../../components/loading/useDelayedLoading';
 import {
   MdReceipt, MdSearch, MdDownload, MdPrint, MdClose,
   MdStore, MdPayments, MdCalendarToday
@@ -31,6 +33,7 @@ export default function SalesPage() {
   const [dateFilter, setDateFilter] = useState('ALL');
   const [activeReceipt, setActiveReceipt] = useState(null);
   const [loading, setLoading] = useState(true);
+  const showTableSkeleton = useDelayedLoading(loading, 200);
   const [page, setPage] = useState(0);
 
   const loadShops = async () => {
@@ -279,10 +282,12 @@ export default function SalesPage() {
               </tr>
             </thead>
             <tbody>
-              {filteredSales.length === 0 ? (
+              {loading && showTableSkeleton ? (
+                <TableSkeleton rows={8} columns={9} />
+              ) : filteredSales.length === 0 ? (
                 <tr>
                   <td colSpan="9" className={styles.emptyTable}>
-                    {loading ? 'Loading sales records...' : 'No transactions recorded matching the selected criteria.'}
+                    {loading ? '' : 'No transactions recorded matching the selected criteria.'}
                   </td>
                 </tr>
               ) : (

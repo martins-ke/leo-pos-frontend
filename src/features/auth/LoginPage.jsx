@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/useAuth';
 import { api } from '../../api/api';
 import LeoMark from '../../components/branding/LeoMark';
+import ButtonSpinner from '../../components/loading/ButtonSpinner';
 import { useFeedback } from '../../context/useFeedback';
 import styles from './Auth.module.css';
 
@@ -33,7 +34,7 @@ export default function LoginPage() {
         navigate(getDestination(user.role));
       } else {
         const message = res.message || 'Login failed';
-        if (/deactivat|inactive|suspend|pending owner approval/i.test(message)) {
+        if (/deactivate|inactive|suspend|pending owner approval/i.test(message)) {
           alert({
             title: /pending owner approval/i.test(message)
               ? 'Account awaiting approval'
@@ -47,7 +48,7 @@ export default function LoginPage() {
         }
       }
     } catch {
-      notify({ type: 'error', message: 'Could not connect to server. Check backend connection.' });
+      notify({ type: 'error', message: 'Could not connect to server.' });
     } finally {
       setLoading(false);
     }
@@ -85,7 +86,12 @@ export default function LoginPage() {
             />
           </label>
           <button type="submit" className={styles.btn} disabled={loading}>
-            {loading ? 'Signing in...' : 'Log in'}
+            {loading ? (
+              <>
+                <ButtonSpinner ariaLabel="Signing in..." />
+                <span>Signing in...</span>
+              </>
+            ) : 'Log in'}
           </button>
         </form>
       </div>

@@ -1,116 +1,150 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import { api } from '../../api/api';
+import { useDelayedLoading } from '../../components/loading/useDelayedLoading';
 import { useNavigate } from 'react-router-dom';
 import {
   MdTrendingUp, MdStore, MdArrowForward, MdPointOfSale, MdCheckCircle, MdPrint, MdClose
 } from 'react-icons/md';
 import ExpandingSelect from '../../components/forms/ExpandingSelect';
 import { useFeedback } from '../../context/useFeedback';
+import { useAuth } from '../../context/useAuth';
 import styles from './Dashboard.module.css';
+
+const DASHBOARD_QUERY_OPTIONS = { staleTime: 30_000, retry: false };
+const EMPTY_DASHBOARD_DATA = {
+  todayRevenue: 0,
+  todayGrossProfit: 0,
+  monthRevenue: 0,
+  monthGrossProfit: 0,
+  todayCashCollected: 0,
+  todayMpesaCollected: 0,
+  todayCardCollected: 0,
+  todayBankTransferCollected: 0,
+  todayNetProfit: 0,
+  monthNetProfit: 0,
+  totalSalesToday: 0,
+  totalProducts: 0,
+  lowStockCount: 0,
+  recentSales: [],
+  lowStockProducts: [],
+};
+
+async function getApiBody(path, errorMessage) {
+  const response = await api.get(path, { showLoading: false });
+  if (!response.success || response.body == null) {
+    throw new Error(response.message || errorMessage);
+  }
+  return response.body;
+}
+
+async function getApiArray(path, errorMessage) {
+  const response = await api.get(path, { showLoading: false });
+  if (!response.success || !Array.isArray(response.body)) {
+    throw new Error(response.message || errorMessage);
+  }
+  return response.body;
+}
+
+function getQueryErrorMessage(error, fallback, connectionMessage) {
+  return error instanceof TypeError
+    ? connectionMessage
+    : error.message || fallback;
+}
 
 export default function DashboardPage() {
   const { notify } = useFeedback();
+  const { user } = useAuth();
   const navigate = useNavigate();
-  const [data, setData] = useState({
-    todayRevenue: 0,
-    todayGrossProfit: 0,
-    monthRevenue: 0,
-    monthGrossProfit: 0,
-    todayCashCollected: 0,
-    todayMpesaCollected: 0,
-    todayCardCollected: 0,
-    todayBankTransferCollected: 0,
-    todayNetProfit: 0,
-    monthNetProfit: 0,
-    totalSalesToday: 0,
-    totalProducts: 0,
-    lowStockCount: 0,
-    recentSales: [],
-    lowStockProducts: []
-  });
-  const [shops, setShops] = useState([]);
   const [selectedShopId, setSelectedShopId] = useState('');
-  const [loading, setLoading] = useState(true);
   const [viewReceipt, setViewReceipt] = useState(null);
-  const [salesForTrend, setSalesForTrend] = useState([]);
   const [salesTrendRange, setSalesTrendRange] = useState(7);
-  const [salesTrendLoading, setSalesTrendLoading] = useState(true);
-  const [stockProducts, setStockProducts] = useState([]);
-  const [stockProductsLoading, setStockProductsLoading] = useState(true);
+  const userId = user?.id ?? null;
+  const shopQuery = selectedShopId ? `?shopId=${encodeURIComponent(selectedShopId)}` : '';
 
-  const fetchDashboardData = () => {
-    setLoading(true);
-    const url = selectedShopId ? `/dashboard/summary?shopId=${selectedShopId}` : '/dashboard/summary';
-    api.get(url)
-      .then(res => {
-        if (res.success && res.body) {
-          setData(res.body);
-        } else {
-          notify({ type: 'error', message: res.message || 'Could not load dashboard data.' });
-        }
-      })
-      .catch(() => notify({ type: 'error', message: 'Could not connect to the server while loading dashboard data.' }))
-      .finally(() => setLoading(false));
-  };
+  const shopsQuery = useQuery({
+    queryKey: ['shops', userId],
+    queryFn: () => getApiBody('/shops', 'Could not load shops.'),
+    ...DASHBOARD_QUERY_OPTIONS,
+  });
+  const dashboardQuery = useQuery({
+    queryKey: ['dashboard', 'summary', userId, selectedShopId],
+    queryFn: () => getApiBody(
+      selectedShopId
+        ? `/dashboard/summary?shopId=${selectedShopId}`
+        : '/dashboard/summary',
+      'Could not load dashboard data.',
+    ),
+    placeholderData: keepPreviousData,
+    ...DASHBOARD_QUERY_OPTIONS,
+  });
+  const salesQuery = useQuery({
+    queryKey: ['sales', userId, selectedShopId],
+    queryFn: () => getApiArray(`/sales${shopQuery}`, 'Could not load sales trend data.'),
+    placeholderData: keepPreviousData,
+    ...DASHBOARD_QUERY_OPTIONS,
+  });
+  const stockProductsQuery = useQuery({
+    queryKey: ['products', userId, selectedShopId],
+    queryFn: () => getApiArray(`/products${shopQuery}`, 'Could not load stock levels.'),
+    placeholderData: keepPreviousData,
+    ...DASHBOARD_QUERY_OPTIONS,
+  });
 
-  const loadShops = () => {
-    api.get('/shops')
-      .then(res => {
-        if (res.success && res.body) setShops(res.body);
-        else notify({ type: 'error', message: res.message || 'Could not load shops.' });
-      })
-      .catch(() => notify({ type: 'error', message: 'Could not connect to the server while loading shops.' }));
-  };
+  const data = dashboardQuery.data ?? EMPTY_DASHBOARD_DATA;
+  const shops = shopsQuery.data ?? [];
+  const salesForTrend = salesQuery.data ?? [];
+  const stockProducts = stockProductsQuery.data ?? [];
 
   useEffect(() => {
-    loadShops();
-  }, []);
+    if (!shopsQuery.error) return;
+    notify({
+      type: 'error',
+      message: getQueryErrorMessage(
+        shopsQuery.error,
+        'Could not load shops.',
+        'Could not connect to the server while loading shops.',
+      ),
+    });
+  }, [shopsQuery.error, shopsQuery.errorUpdatedAt, notify]);
 
   useEffect(() => {
-    fetchDashboardData();
-  }, [selectedShopId]);
+    if (!dashboardQuery.error) return;
+    notify({
+      type: 'error',
+      message: getQueryErrorMessage(
+        dashboardQuery.error,
+        'Could not load dashboard data.',
+        'Could not connect to the server while loading dashboard data.',
+      ),
+    });
+  }, [dashboardQuery.error, dashboardQuery.errorUpdatedAt, notify]);
 
   useEffect(() => {
-    let isCurrentRequest = true;
-    const shopQuery = selectedShopId ? `?shopId=${encodeURIComponent(selectedShopId)}` : '';
-    setSalesTrendLoading(true);
-    setStockProductsLoading(true);
+    const errors = [
+      salesQuery.error,
+      stockProductsQuery.error,
+    ].filter(Boolean);
+    if (errors.length === 0) return;
 
-    Promise.all([api.get(`/sales${shopQuery}`), api.get(`/products${shopQuery}`)])
-      .then(([salesRes, productsRes]) => {
-        if (!isCurrentRequest) return;
-
-        if (salesRes.success && Array.isArray(salesRes.body)) {
-          setSalesForTrend(salesRes.body);
-        } else {
-          setSalesForTrend([]);
-          notify({ type: 'error', message: salesRes.message || 'Could not load sales trend data.' });
-        }
-
-        if (productsRes.success && Array.isArray(productsRes.body)) {
-          setStockProducts(productsRes.body);
-        } else {
-          setStockProducts([]);
-          notify({ type: 'error', message: productsRes.message || 'Could not load stock levels.' });
-        }
-      })
-      .catch(() => {
-        if (!isCurrentRequest) return;
-        setSalesForTrend([]);
-        setStockProducts([]);
-        notify({ type: 'error', message: 'Could not connect to the server while loading sales and stock data.' });
-      })
-      .finally(() => {
-        if (isCurrentRequest) {
-          setSalesTrendLoading(false);
-          setStockProductsLoading(false);
-        }
+    if (errors.some(error => error instanceof TypeError)) {
+      notify({
+        type: 'error',
+        message: 'Could not connect to the server while loading sales and stock data.',
       });
+      return;
+    }
 
-    return () => {
-      isCurrentRequest = false;
-    };
-  }, [selectedShopId]);
+    errors.forEach(error => {
+      notify({ type: 'error', message: error.message });
+    });
+  }, [
+    salesQuery.error,
+    salesQuery.errorUpdatedAt,
+    stockProductsQuery.error,
+    stockProductsQuery.errorUpdatedAt,
+    notify,
+  ]);
 
   const salesTrend = useMemo(() => {
     const today = new Date();
@@ -196,6 +230,14 @@ export default function DashboardPage() {
   }, [salesForTrend, stockProducts]);
 
   const maxTopSellerStock = Math.max(...topSellingStock.map(product => product.quantity), 1);
+
+  const isInitialPending = [shopsQuery, dashboardQuery, salesQuery, stockProductsQuery].some(query => query.isPending);
+  const showSkeleton = useDelayedLoading(isInitialPending, 200);
+
+  if (isInitialPending) {
+    return showSkeleton ? <DashboardSkeleton /> : null;
+  }
+
   return (
     <div className={styles.container}>
       {/* Header with Title and Outlet Filter */}
@@ -329,9 +371,7 @@ export default function DashboardPage() {
           </div>
         </div>
         <div className={styles.salesTrendChart}>
-          {salesTrendLoading ? (
-            <div className={styles.trendEmptyState}>Loading sales trend...</div>
-          ) : salesTrend.maxTotal === 0 ? (
+          {salesTrend.maxTotal === 0 ? (
             <div className={styles.trendEmptyState}>No sales recorded in this period.</div>
           ) : (
             <svg
@@ -402,7 +442,7 @@ export default function DashboardPage() {
                 {(data.recentSales || []).length === 0 ? (
                   <tr>
                     <td colSpan="7" className={styles.emptyTable}>
-                      {loading ? 'Loading sales data...' : 'No sales recorded yet. Ring up a sale in POS to see it live!'}
+                      No sales recorded yet. Ring up a sale in POS to see it live!
                     </td>
                   </tr>
                 ) : (
@@ -460,9 +500,7 @@ export default function DashboardPage() {
               <h3>Top sellers</h3>
               <span>Current stock</span>
             </div>
-            {salesTrendLoading || stockProductsLoading ? (
-              <div className={styles.stockChartEmpty}>Loading stock levels...</div>
-            ) : topSellingStock.length === 0 ? (
+            {topSellingStock.length === 0 ? (
               <div className={styles.stockChartEmpty}>No best-selling items to chart yet.</div>
             ) : (
               <div className={styles.stockChartRows}>
@@ -580,6 +618,47 @@ export default function DashboardPage() {
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+function DashboardSkeleton() {
+  return (
+    <div className={styles.container} role="status" aria-live="polite" aria-busy="true">
+      <span className={styles.visuallyHidden}>Loading dashboard data</span>
+      <div className={styles.skeletonHeader}>
+        <div>
+          <span className={`${styles.skeletonBlock} ${styles.skeletonHeading}`} />
+          <span className={`${styles.skeletonBlock} ${styles.skeletonSubtitle}`} />
+        </div>
+        <span className={`${styles.skeletonBlock} ${styles.skeletonFilter}`} />
+      </div>
+
+      <div className={styles.kpiGrid}>
+        {[0, 1, 2].map(card => (
+          <div className={`${styles.kpiCard} ${styles.skeletonCard}`} key={card}>
+            <span className={`${styles.skeletonBlock} ${styles.skeletonLabel}`} />
+            <span className={`${styles.skeletonBlock} ${styles.skeletonMetric}`} />
+            <span className={`${styles.skeletonBlock} ${styles.skeletonDetail}`} />
+          </div>
+        ))}
+      </div>
+
+      <section className={`${styles.sectionCard} ${styles.skeletonPanel}`}>
+        <span className={`${styles.skeletonBlock} ${styles.skeletonSectionTitle}`} />
+        <span className={`${styles.skeletonBlock} ${styles.skeletonChart}`} />
+      </section>
+
+      <div className={styles.splitGrid}>
+        {[0, 1].map(panel => (
+          <section className={`${styles.sectionCard} ${styles.skeletonPanel}`} key={panel}>
+            <span className={`${styles.skeletonBlock} ${styles.skeletonSectionTitle}`} />
+            {[0, 1, 2].map(row => (
+              <span className={`${styles.skeletonBlock} ${styles.skeletonRow}`} key={row} />
+            ))}
+          </section>
+        ))}
+      </div>
     </div>
   );
 }

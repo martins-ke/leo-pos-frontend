@@ -44,7 +44,7 @@ export default function Layout({ variant = 'owner' }) {
                 <LeoMark />
               </div>
               <span className={styles.mobileLogoText}>
-                Leo<span className={styles.mobileLogoDot}>.</span>
+                Leo
               </span>
             </div>
           </div>

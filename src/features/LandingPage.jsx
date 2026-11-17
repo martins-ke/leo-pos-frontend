@@ -26,7 +26,7 @@ const CORE_FEATURES = [
     badge: 'Checkout Speed',
     title: 'Lightning-Fast POS Register',
     description:
-      'Ring up sales in under 3 seconds. Supports barcode scanning, quick-tap product grid, cash change calculation, and split tender.',
+      'Ring up sales in under 3 seconds. Quick-tap product grid, cash change calculation, and split tender.',
     accent: 'orange',
   },
   {
@@ -66,7 +66,7 @@ const CORE_FEATURES = [
     badge: 'Gross Margin',
     title: 'Live Profit & Expense Tracking',
     description:
-      'Deduct shop rent, electricity, and operational costs from your gross sales to view true net profits. Full Jasper PDF export.',
+      'Deduct shop rent, electricity, and operational costs from your gross sales to view true net profits. PDF export.',
     accent: 'blue',
   },
 ];
@@ -181,19 +181,19 @@ export default function LandingPage() {
           <div className={styles.heroBadgeBox}>
             <span className={styles.heroBadgePill}>
               <span className={styles.badgeDotLive} />
-              THE REAL-TIME POS FOR Wholesale/Retail SHOPS
+              THE REAL-TIME POS FOR WHOLESALE/RETAIL SHOPS
             </span>
           </div>
 
           <h1 className={styles.heroHeadline}>
-            Run Your Entire Shop.<br />
-            <span className={styles.glowTextOrange}>Keep Track of Everything</span>{' '}
-            <span className={styles.glowTextBlue}>Cloud-Powered.</span>
+            Take Control of Your Shop Today.<br />
+            <span className={styles.glowTextOrange}>Less Hassle.</span>{' '}
+            <span className={styles.glowTextBlue}>More Control.</span>
           </h1>
 
           <p className={styles.heroSubtitle}>
             Leo gives business owners real-time control of today's sales. Lightning-fast checkout,
-            multi-outlet inventory tracking, cashier anti-theft controls, and customer debt ledger.
+            multi-outlet inventory tracking, cashier anti-theft controls, expense and customer debt ledger.
           </p>
 
           <div className={styles.heroCtaGroup}>
@@ -203,14 +203,14 @@ export default function LandingPage() {
             </Link>
             <Link to="/login" className={styles.heroCtaGlass}>
               <MdPointOfSale />
-              <span>Launch POS Demo</span>
+              <span>Launch POS</span>
             </Link>
           </div>
 
           <div className={styles.heroTrustTicks}>
             <span><MdCheck /> No Credit Card Required</span>
-            <span><MdCheck /> Works on Phones, Tabs & PCs</span>
-            <span><MdCheck /> Instant Setup in 2 Mins</span>
+            <span><MdCheck /> Works on Phones, Tabletss & PCs/Desktops</span>
+            <span><MdCheck /> Instant Setup in 2 Mins</span> 
           </div>
 
           {/* ── Mockup: Interactive Glowing POS Terminal Screen ── */}
@@ -401,7 +401,7 @@ export default function LandingPage() {
         <div className={styles.sectionHeadCentered}>
           <span className={styles.sectionPreTitle}>ENTERPRISE-GRADE CAPABILITIES</span>
           <h2 className={styles.sectionTitle}>
-            Everything You Need to <span className={styles.textGlowOrange}>Master Your Shop</span>
+            Everything You Need to <span className={styles.textGlowOrange}>Manage Your Shop Today.</span>
           </h2>
           <p className={styles.sectionSubtitle}>
             Built specifically to solve the headaches of shrinkage, slow counter lines, stockouts,
@@ -569,7 +569,7 @@ export default function LandingPage() {
               <span className={styles.footerTitle}>Leo POS</span>
             </Link>
             <p className={styles.footerBio}>
-              Leo (meaning "Today" in Swahili) is the cloud-native point of sale designed for real-time visibility, speed, and multi-outlet control.
+              Leo is the cloud-native point of sale designed for real-time visibility, speed, and multi-outlet control.
             </p>
             <div className={styles.footerPills}>
               <span className={styles.pillIso}>JWT Isolated</span>
@@ -584,7 +584,7 @@ export default function LandingPage() {
               <li><a href="#features">Multi-Branch Sync</a></li>
               <li><a href="#features">Debt Ledger (Madeni)</a></li>
               <li><a href="#features">Staff &amp; Cashier Audits</a></li>
-              <li><a href="#features">Jasper PDF Receipts</a></li>
+              <li><a href="#features"> PDF Receipts</a></li>
             </ul>
           </div>
 

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import styles from './FormWizard.module.css';
 import buttonStyles from '../buttons/ActionButton.module.css';
+import ButtonSpinner from '../loading/ButtonSpinner';
 
 export default function SimpleFormModal({
   open,
@@ -58,7 +59,8 @@ export default function SimpleFormModal({
               Cancel
             </button>
             <button type="submit" className={buttonStyles.primaryButton} disabled={busy}>
-              {busy ? 'Saving...' : submitLabel}
+              {busy && <ButtonSpinner ariaLabel="Saving..." />}
+              <span>{busy ? 'Saving...' : submitLabel}</span>
             </button>
           </footer>
         </form>

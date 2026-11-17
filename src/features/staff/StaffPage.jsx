@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import { api } from '../../api/api';
+import TableSkeleton from '../../components/loading/TableSkeleton';
+import { useDelayedLoading } from '../../components/loading/useDelayedLoading';
 import {
   MdCheck, MdPersonAdd, MdDelete,
   MdClose, MdSearch, MdPeople, MdShield, MdHowToReg, MdStorefront
@@ -155,6 +157,7 @@ export default function StaffPage() {
   const [formStep, setFormStep] = useState(0);
   const [form, setForm] = useState({ username: '', email: '', password: '', role: 'STAFF', status: 'ACTIVE' });
   const [loading, setLoading] = useState(true);
+  const showTableSkeleton = useDelayedLoading(loading, 200);
   const [page, setPage] = useState(0);
   const [shopModalStaff, setShopModalStaff] = useState(null); // staff member whose shops we're managing
 
@@ -355,10 +358,12 @@ export default function StaffPage() {
               </tr>
             </thead>
             <tbody>
-              {filteredStaff.length === 0 ? (
+              {loading && showTableSkeleton ? (
+                <TableSkeleton rows={5} columns={6} />
+              ) : filteredStaff.length === 0 ? (
                 <tr>
                   <td colSpan="6" className={styles.emptyTable}>
-                    {loading ? 'Loading staff records...' : 'No staff accounts found. Click "Provision New Cashier" to add team members.'}
+                    {loading ? '' : 'No staff accounts found. Click "Provision New Cashier" to add team members.'}
                   </td>
                 </tr>
               ) : (
