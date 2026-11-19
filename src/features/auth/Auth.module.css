@@ -394,3 +394,112 @@
     font-size: var(--font-size-4xl);
   }
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   LOGIN — original card + forgot / view toggle / sign up
+   Only adds login-specific classes. Original layout untouched.
+   ═══════════════════════════════════════════════════════════════ */
+
+.loginPage {
+  background:
+    radial-gradient(ellipse 900px 600px at 50% -8%, rgba(255, 106, 0, 0.05) 0%, transparent 55%),
+    var(--bg-app);
+}
+
+.loginLabelRow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.loginForgot {
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--text-muted);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+
+.loginForgot:hover {
+  color: var(--primary);
+}
+
+.loginPasswordWrap {
+  position: relative;
+  display: block;
+}
+
+.loginPasswordWrap input {
+  padding-right: 46px;
+}
+
+.loginPasswordToggle {
+  position: absolute;
+  right: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  transition: color 0.15s ease, background 0.15s ease;
+}
+
+.loginPasswordToggle:hover {
+  color: var(--text-main);
+  background: var(--bg-subtle);
+}
+
+.loginPasswordToggle svg {
+  width: 20px;
+  height: 20px;
+}
+
+.loginFooter {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1);
+  margin-top: var(--space-4);
+  padding-top: var(--space-4);
+  border-top: var(--border-width) solid var(--border-subtle);
+  font-size: var(--font-size-base);
+  color: var(--text-muted);
+}
+
+.loginFooter a {
+  color: var(--primary);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.loginFooter a:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 480px) {
+  .loginPasswordToggle {
+    width: 32px;
+    height: 32px;
+  }
+
+  .loginFooter {
+    font-size: var(--font-size-sm);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .loginForgot,
+  .loginPasswordToggle {
+    transition: none;
+  }
+}

@@ -248,6 +248,7 @@
 
 .pCardRow {
   display: flex;
+  flex-direction: row;
   align-items: center;
   justify-content: space-between;
   gap: var(--space-2);
@@ -993,8 +994,6 @@
     gap: var(--space-1-5);
   }
 
-  .pName { font-size: var(--font-size-sm); }
-
   .checkoutPanel {
     position: fixed;
     left: 0;
@@ -1214,10 +1213,10 @@
 @media (max-width: 360px) {
   .pCardRow {
     align-items: flex-start;
-    flex-direction: column;
     gap: var(--space-1);
   }
 
+  .pName { font-size: var(--font-size-sm); }
   .pPrice { flex-wrap: wrap; }
   .productCard { min-height: 76px; }
 

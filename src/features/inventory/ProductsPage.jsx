@@ -364,8 +364,8 @@ export default function ProductsPage() {
                 setShowAddModal(true);
               }}
             >
-              <MdAdd size={20} />
-              <span>Add New Product</span>
+              <MdAdd size={23} />
+              <span>New Product</span>
             </button>
           </div>
         </div>
