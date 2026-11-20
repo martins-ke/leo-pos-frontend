@@ -1,4 +1,9 @@
-const BASE_URL = import.meta.env?.VITE_API_BASE_URL ?? 'http://localhost:8181';
+const configuredBaseUrl = (import.meta.env.LEO_API_BASE_URL || '').trim();
+
+const BASE_URL = (
+  configuredBaseUrl || (import.meta.env.DEV ? 'http://localhost:8181' : '')
+).replace(/\/+$/, '');
+
 const REQUEST_STARTED = 'leo-api-request-start';
 const REQUEST_FINISHED = 'leo-api-request-finish';
 let nextRequestId = 0;
@@ -35,7 +40,11 @@ const handleResponse = async (res) => {
 const request = async (path, options, label) => {
   const id = ++nextRequestId;
   if (label) dispatchRequestEvent(REQUEST_STARTED, { id, label });
+
   try {
+    if (!BASE_URL) {
+  throw new Error('LEO base url is not configured.');
+  }
     const response = await fetch(`${BASE_URL}${path}`, options);
     return await handleResponse(response);
   } finally {
