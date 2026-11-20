@@ -1,4 +1,4 @@
-const configuredBaseUrl = (import.meta.env.LEO_API_BASE_URL || '').trim();
+const configuredBaseUrl = (import.meta.env.VITE_LEO_API_BASE_URL || '').trim();
 
 const BASE_URL = (
   configuredBaseUrl || (import.meta.env.DEV ? 'http://localhost:8181' : '')
