@@ -16,6 +16,7 @@ import {
   MdCheck,
 } from 'react-icons/md';
 import LeoMark from '../components/branding/LeoMark';
+import brandOwnerImg from '../assets/brand-owner.jpg';
 import styles from './LandingPage.module.css';
 
 /* ─── Feature Data for Leo POS ─────────────────────────────────── */
@@ -177,40 +178,97 @@ export default function LandingPage() {
 
       {/* ── Hero Section ── */}
       <section className={styles.heroSection}>
+        {/* Mobile Pale Background Watermark */}
+        <div className={styles.heroMobileWatermark} aria-hidden="true">
+          <img src={brandOwnerImg} alt="" className={styles.watermarkImg} />
+          <div className={styles.watermarkOverlay} />
+        </div>
+
         <div className={styles.heroContainer}>
-          <div className={styles.heroBadgeBox}>
-            <span className={styles.heroBadgePill}>
-              <span className={styles.badgeDotLive} />
-              THE REAL-TIME POS FOR WHOLESALE/RETAIL SHOPS
-            </span>
-          </div>
+          <div className={styles.heroSplitRow}>
+            {/* Left Column: Headline, Copy & Actions */}
+            <div className={styles.heroTextCol}>
+              <div className={styles.heroBadgeBox}>
+                <span className={styles.heroBadgePill}>
+                  <span className={styles.badgeDotLive} />
+                  THE REAL-TIME POS FOR WHOLESALE/RETAIL SHOPS
+                </span>
+              </div>
 
-          <h1 className={styles.heroHeadline}>
-            Take Control of Your Shop Today.<br />
-            <span className={styles.glowTextOrange}>Less Hassle.</span>{' '}
-            <span className={styles.glowTextBlue}>More Control.</span>
-          </h1>
+              <h1 className={styles.heroHeadline}>
+                Take Control of Your Shop Today.<br />
+                <span className={styles.glowTextOrange}>Less Hassle.</span>{' '}
+                <span className={styles.glowTextBlue}>More Control.</span>
+              </h1>
 
-          <p className={styles.heroSubtitle}>
-            Leo gives business owners real-time control of today's sales. Lightning-fast checkout,
-            multi-outlet inventory tracking, cashier anti-theft controls, expense and customer debt ledger.
-          </p>
+              <p className={styles.heroSubtitle}>
+                Leo gives business owners real-time control of today's sales. Lightning-fast checkout,
+                multi-outlet inventory tracking, cashier anti-theft controls, expense and customer debt ledger.
+              </p>
 
-          <div className={styles.heroCtaGroup}>
-            <Link to="/register" className={styles.heroCtaOrange}>
-              <span>Start 14-Day Free Trial</span>
-              <MdArrowForward />
-            </Link>
-            <Link to="/login" className={styles.heroCtaGlass}>
-              <MdPointOfSale />
-              <span>Launch POS</span>
-            </Link>
-          </div>
+              <div className={styles.heroCtaGroup}>
+                <Link to="/register" className={styles.heroCtaOrange}>
+                  <span>Start 14-Day Free Trial</span>
+                  <MdArrowForward />
+                </Link>
+                <Link to="/login" className={styles.heroCtaGlass}>
+                  <MdPointOfSale />
+                  <span>Launch POS</span>
+                </Link>
+              </div>
 
-          <div className={styles.heroTrustTicks}>
-            <span><MdCheck /> No Credit Card Required</span>
-            <span><MdCheck /> Works on Phones, Tabletss & PCs/Desktops</span>
-            <span><MdCheck /> Instant Setup in 2 Mins</span> 
+              <div className={styles.heroTrustTicks}>
+                <span><MdCheck /> No Credit Card Required</span>
+                <span><MdCheck /> Works on Phones, Tablets & PCs</span>
+                <span><MdCheck /> Instant Setup in 2 Mins</span> 
+              </div>
+            </div>
+
+            {/* Right Column: Desktop Pro Brand Portrait & Active POS Stage */}
+            <div className={styles.heroBrandCol}>
+              <div className={styles.brandCardWrapper}>
+                {/* Ambient backglow */}
+                <div className={styles.brandBackglow} aria-hidden="true" />
+                
+                <div className={styles.brandCard}>
+                  <div className={styles.brandImageFrame}>
+                    <img
+                      src={brandOwnerImg}
+                      alt="Minimart store owner managing shop records effortlessly with Leo POS"
+                      className={styles.brandImage}
+                    />
+                    <div className={styles.brandImageShine} />
+                  </div>
+
+                  {/* Floating Badges */}
+                  <div className={styles.floatingTopChip}>
+                    <span className={styles.pulseGreenDot} />
+                    <span className={styles.chipText}>Minimart Counter · Records Synced</span>
+                  </div>
+
+                  <div className={styles.floatingBottomCard}>
+                    <div className={styles.floatingCardHeader}>
+                      <span className={styles.verifiedIcon}><MdCheckCircle /></span>
+                      <div>
+                        <strong>Records Management Made Easier</strong>
+                        <small>Zero Paperwork · Automated Daily Balances</small>
+                      </div>
+                    </div>
+                    <div className={styles.floatingCardStats}>
+                      <div className={styles.miniStat}>
+                        <span className={styles.miniStatLabel}>Shop Records</span>
+                        <span className={styles.miniStatVal}>⚡ 100% Digital</span>
+                      </div>
+                      <div className={styles.miniStatDivider} />
+                      <div className={styles.miniStat}>
+                        <span className={styles.miniStatLabel}>Till Reconcile</span>
+                        <span className={styles.miniStatVal}>🔒 Under 3s</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* ── Mockup: Interactive Glowing POS Terminal Screen ── */}
