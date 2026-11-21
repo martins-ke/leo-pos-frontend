@@ -147,7 +147,7 @@ export default function PosPage() {
     }
 
     const existing = cart.find(item => item.id === product.id);
-    const defaultStep = product.unit?.toLowerCase().includes('kg') || product.unit?.toLowerCase().includes('lit') ? 0.5 : 1;
+    const defaultStep = product.unit?.toLowerCase().includes('kg') || product.unit?.toLowerCase().includes('lit') ? 0.25 : 1;
     const step = requestedQty !== null ? requestedQty : defaultStep;
     const currentQty = existing ? existing.qty : 0;
 
@@ -602,7 +602,7 @@ export default function PosPage() {
                 const itemPrice = parseFloat(item.selling_price || item.sellingPrice || 0);
                 const lineTotal = itemPrice * item.qty;
                 const isDecimalUnit = item.unit?.toLowerCase().includes('kg') || item.unit?.toLowerCase().includes('lit');
-                const step = isDecimalUnit ? 0.5 : 1;
+                const step = isDecimalUnit ? 0.25 : 1;
 
                 return (
                   <div key={item.id} className={styles.cartItem}>

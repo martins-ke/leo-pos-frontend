@@ -131,7 +131,7 @@ const PRICING_TIERS = [
 ];
 
 const QUICK_STATS = [
-  { val: '< 2.5s', label: 'Average checkout time' },
+  { val: '< 1.5s', label: 'Average checkout time' },
   { val: '100%', label: 'Cryptographic tenant isolation' },
   { val: '24/7', label: 'Offline-ready counter sync' },
   { val: 'KES 0', label: 'Setup fee / cancel anytime' },
@@ -669,10 +669,7 @@ export default function LandingPage() {
 
         <div className={styles.footerBottomBar}>
           <div className={styles.footerBottomInner}>
-            <p>© {new Date().getFullYear()} Leo POS Technologies. All rights reserved.</p>
-            <div className={styles.bottomStatus}>
-              <span className={styles.statusDot} /> All Systems Operational
-            </div>
+            <p>© {new Date().getFullYear()} StackTeck Solutions. All rights reserved.</p>
           </div>
         </div>
       </footer>

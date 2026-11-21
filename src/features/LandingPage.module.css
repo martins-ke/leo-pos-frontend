@@ -501,7 +501,7 @@
   -webkit-text-fill-color: transparent;
 }
 
-.heroSubtitle {
+.zubtitle {
   font-size: clamp(0.92rem, 1.3vw, 1.12rem);
   color: var(--text-muted);
   max-width: 680px;
@@ -1579,22 +1579,6 @@
   font-size: 0.74rem;
   color: var(--text-muted);
 }
-
-.bottomStatus {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  color: #059669;
-  font-weight: 700;
-}
-
-.statusDot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: #10b981;
-}
-
 /* ─── Robust Mobile & Tablet Viewports ─────────────────────────── */
 
 @media (max-width: 992px) {
@@ -1622,7 +1606,8 @@
 
   .heroTextCol .heroSubtitle {
     margin: 0 auto 1.75rem auto;
-    color: #0f172a !important;
+    color: #f6f7f8;
+    text-shadow: 5px 5px 15px rgba(58, 101, 166, 0.75);
     font-weight: 600;
   }
 
@@ -1632,6 +1617,7 @@
 
   .heroTextCol .heroTrustTicks {
     justify-content: center;
+    color: var(--accent-pink);
   }
 
   /* On tablet & mobile: Render rich, 100% visible brand hero background with ZERO blur or overlay */
@@ -1819,22 +1805,23 @@
     text-shadow: none !important;
     position: relative;
     z-index: 2;
+    font-weight: 700;
     word-break: break-word;
     max-width: 100%;
   }
 
-  .heroSubtitle {
+  .heroTextCol .heroSubtitle {
     font-size: 0.88rem;
     line-height: 1.55;
     margin-bottom: 1.5rem;
-    color: #0f172a !important;
+    color: #0f172a;
     font-weight: 600;
     text-shadow: none !important;
     position: relative;
     z-index: 2;
     word-break: break-word;
     max-width: 100%;
-    background: rgba(255, 255, 255, 0.94);
+    background: rgba(209, 205, 205, 0.56);
     border: 1px solid rgba(226, 232, 240, 0.9);
     border-radius: 0.75rem;
     padding: 0.75rem 0.9rem;
