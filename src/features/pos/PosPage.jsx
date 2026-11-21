@@ -19,7 +19,7 @@ const CUSTOMER_PAGE_SIZE = 100;
 
 export default function PosPage() {
   const { user } = useAuth();
-  const { notify, beginSaving } = useFeedback();
+  const { notify } = useFeedback();
   const [products, setProducts] = useState([]);
   const [customers, setCustomers] = useState([]);
   const [shops, setShops] = useState([]);
@@ -37,12 +37,14 @@ export default function PosPage() {
   const [recordAsDebt, setRecordAsDebt] = useState(false);
   const [lastSale, setLastSale] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [shopsLoading, setShopsLoading] = useState(true);
   const [voiceEnabled, setVoiceEnabled] = useState(() => getVoiceFeatureFlag());
   const [mobileCartOpen, setMobileCartOpen] = useState(false);
   const searchInputRef = useRef(null);
 
   // Load shops and initial products
   const loadShops = async () => {
+    setShopsLoading(true);
     try {
       const res = await api.get('/shops');
       if (res.success && res.body && res.body.length > 0) {
@@ -57,7 +59,10 @@ export default function PosPage() {
         localStorage.removeItem('leo_active_shop');
       }
     } catch {
+      setShops([]);
       notify({ type: 'error', message: 'Could not connect to the server while loading shops.' });
+    } finally {
+      setShopsLoading(false);
     }
   };
 
@@ -131,7 +136,13 @@ export default function PosPage() {
   // Keyboard shortcut: '/' to focus search
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if (e.key === '/' && document.activeElement !== searchInputRef.current) {
+      const target = e.target;
+      const isTypingField = target instanceof HTMLElement && (
+        target.isContentEditable ||
+        ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName)
+      );
+
+      if (e.key === '/' && !isTypingField && document.activeElement !== searchInputRef.current) {
         e.preventDefault();
         searchInputRef.current?.focus();
       }
@@ -238,7 +249,6 @@ export default function PosPage() {
     }
 
     setLoading(true);
-    const saveStatus = beginSaving({ title: 'Processing sale' });
     const tendered = asDebt ? 0 : paymentMethod === 'CASH' ? numericTendered : grandTotal;
     const calculatedChange = !asDebt && paymentMethod === 'CASH' ? changeGiven : 0;
 
@@ -265,17 +275,13 @@ export default function PosPage() {
         setAmountTendered('');
         setRecordAsDebt(false);
         setMobileCartOpen(false);
-        saveStatus.complete({
-          title: asDebt ? 'Debt sale recorded' : 'Sale complete',
-          message: `Receipt #${res.body.receiptNumber || res.body.id}`,
-        });
         loadProducts();
         invalidateDashboardData();
       } else {
-        saveStatus.fail({ message: res.message || 'Checkout failed. Please verify stock.' });
+        notify({ type: 'error', message: res.message || 'Checkout failed. Please verify stock.' });
       }
     } catch {
-      saveStatus.fail({ message: 'Network connection error while processing sale.' });
+      notify({ type: 'error', message: 'Network connection error while processing sale.' });
     } finally {
       setLoading(false);
     }
@@ -316,6 +322,8 @@ export default function PosPage() {
         setLastSale(res.body);
         setCart([]);
         setAmountTendered('');
+        setRecordAsDebt(false);
+        setMobileCartOpen(false);
         loadProducts();
         invalidateDashboardData();
         return {
@@ -370,6 +378,33 @@ export default function PosPage() {
 
   const activeShopObj = shops.find(s => s.id === selectedShopId) || shops[0];
 
+  if (shopsLoading) {
+    return (
+      <div
+        className={styles.posContainer}
+        role="status"
+        aria-live="polite"
+        style={{
+          minHeight: '70vh',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: '14px',
+          color: 'var(--text-muted)',
+        }}>
+          <span className={styles.spinner} />
+          <p style={{ margin: 0 }}>Loading your shops...</p>
+        </div>
+      </div>
+    );
+  }
+
   if (shops.length === 0) {
     return (
       <div className={styles.posContainer}>
@@ -388,11 +423,11 @@ export default function PosPage() {
           maxWidth: '560px'
         }}>
           <MdStore size={56} style={{ color: 'var(--primary)', marginBottom: '16px', opacity: 0.8 }} />
-          <h2 style={{ marginBottom: '8px', color: 'var(--text-main)' }}>No Assigned Shop</h2>
+          <h2 style={{ marginBottom: '8px', color: 'var(--text-main)' }}>No Managed Shops</h2>
           <p style={{ color: 'var(--text-muted)', fontSize: 'var(--font-size-md)', lineHeight: 1.6, marginBottom: '24px' }}>
             {user?.role === 'OWNER'
               ? 'You have not registered any shops yet. Please navigate to the Shops management tab to create your first outlet.'
-              : 'Your cashier account has not been assigned to any shop yet. Please contact your shop owner/manager to assign you to a register counter.'}
+              : 'Your account has not been assigned to any shop yet. Please contact your shop owner/manager to assign you to a register counter.'}
           </p>
           <button
             onClick={loadShops}
@@ -400,7 +435,7 @@ export default function PosPage() {
             style={{ padding: '8px 20px', borderRadius: '8px', background: 'var(--primary)', color: '#fff' }}
           >
             <MdRefresh size={18} style={{ marginRight: '6px' }} />
-            Check Shop Assignments
+            Reload Shops
           </button>
         </div>
       </div>
@@ -416,13 +451,20 @@ export default function PosPage() {
           <ExpandingSelect
             value={selectedShopId}
             onChange={value => {
+              if (value === selectedShopId) return;
+
+              clearCart();
+              setAmountTendered('');
+              setPaymentMethod('CASH');
+              setRecordAsDebt(false);
+              setMobileCartOpen(false);
+              setSearchTerm('');
               setSelectedShopId(value);
               setCatalogPage(0);
               setCustomerPage(0);
               setSelectedCustomerId('');
               setSelectedCustomerName('');
               setSelectedCustomerCreditEligible(false);
-              setRecordAsDebt(false);
             }}
             className={styles.shopSelect}
             ariaLabel="Select register outlet"
@@ -500,7 +542,7 @@ export default function PosPage() {
             <PaginationControls
               page={customerPage}
               pageSize={CUSTOMER_PAGE_SIZE}
-              totalItems={Number.NaN}
+              totalItems={customers.length}
               hasNext={customerHasNext}
               onPageChange={setCustomerPage}
             />
@@ -880,11 +922,19 @@ export default function PosPage() {
             </div>
 
             <div className={styles.modalActions}>
-              <button className={styles.printBtn} onClick={() => window.print()}>
+              <button type="button" className={styles.printBtn} onClick={() => window.print()}>
                 <MdPrint size={18} />
-                <span>Print Thermal Receipt</span>
+                <span>Print Receipt</span>
               </button>
-              <button className={styles.doneBtn} onClick={() => setLastSale(null)}>
+              <button
+                type="button"
+                className={styles.doneBtn}
+                onClick={() => {
+                  setLastSale(null);
+                  clearCart();
+                  searchInputRef.current?.focus();
+                }}
+              >
                 New Sale
               </button>
             </div>

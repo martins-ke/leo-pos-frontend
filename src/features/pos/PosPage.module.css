@@ -931,19 +931,18 @@
   font-weight: 600;
   font-size: var(--font-size-md);
   cursor: pointer;
-  min-height: 44px;
 }
 
 .doneBtn {
+  flex: 0.75;
   background: var(--bg-subtle);
   border: var(--border-width) solid var(--border-default);
   padding: var(--space-2-25) var(--space-3-5);
   border-radius: var(--radius-md);
   font-weight: 600;
   font-size: var(--font-size-md);
-  color: var(--text-secondary);
+  color: var(--accent-blue);
   cursor: pointer;
-  min-height: 44px;
 }
 
 /* ── Responsive — tablet/mobile ──────────────────────────── */
