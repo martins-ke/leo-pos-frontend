@@ -5,7 +5,7 @@ import LeoMark from '../branding/LeoMark';
 import {
   MdDashboard, MdStore, MdInventory2, MdPointOfSale,
   MdPeople, MdReceipt, MdLogout, MdAccountBalanceWallet, MdPayments,
-  MdMoneyOff, MdInventory, MdExpandLess, MdExpandMore
+  MdMoneyOff, MdInventory, MdExpandLess, MdExpandMore, MdHelpOutline
 } from 'react-icons/md';
 import styles from './Sidebar.module.css';
 
@@ -33,6 +33,7 @@ const ownerLinks = [
   { to: '/owner/accounts', label: 'Shop Account', icon: <MdAccountBalanceWallet /> },
   { to: '/owner/shops', label: 'Outlets & Shops', icon: <MdStore /> },
   { to: '/owner/staff', label: 'Staff & Team', icon: <MdPeople /> },
+  { to: '/help', label: 'Help Center', icon: <MdHelpOutline /> },
 ];
 
 const clientLinks = [
@@ -46,6 +47,7 @@ const clientLinks = [
       { to: '/client/debts', label: 'Customer Debts', icon: <MdPayments /> },
     ],
   },
+  { to: '/help', label: 'Help Center', icon: <MdHelpOutline /> },
 ];
 
 const platformLinks = [
@@ -56,11 +58,13 @@ export default function Sidebar({ isOpen, onCloseMobile, variant = 'owner' }) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+
   const links = variant === 'platform'
     ? platformLinks
     : variant === 'client'
       ? clientLinks
       : ownerLinks;
+
   const [expandedGroups, setExpandedGroups] = useState({});
 
   useEffect(() => {
@@ -69,6 +73,7 @@ export default function Sidebar({ isOpen, onCloseMobile, variant = 'owner' }) {
         .filter(({ children }) => children?.some(({ to }) => to === location.pathname))
         .map(({ label }) => [label, true])
     );
+
     if (Object.keys(activeGroups).length > 0) {
       setExpandedGroups((current) => ({ ...current, ...activeGroups }));
     }
@@ -76,7 +81,13 @@ export default function Sidebar({ isOpen, onCloseMobile, variant = 'owner' }) {
 
   const handleLogout = () => {
     logout();
-    navigate(variant === 'platform' ? '/platform/login' : variant === 'owner' ? '/owner/login' : '/login');
+    navigate(
+      variant === 'platform'
+        ? '/platform/login'
+        : variant === 'owner'
+          ? '/owner/login'
+          : '/login'
+    );
   };
 
   const getInitials = (name) => {
@@ -86,13 +97,19 @@ export default function Sidebar({ isOpen, onCloseMobile, variant = 'owner' }) {
 
   return (
     <>
-      {/* Mobile Backdrop Overlay */}
-      {isOpen && <div className={styles.backdrop} onClick={onCloseMobile} />}
+      {isOpen && (
+        <div
+          className={styles.backdrop}
+          onClick={onCloseMobile}
+        />
+      )}
 
       <aside className={`${styles.sidebar} ${isOpen ? styles.sidebarMobileOpen : ''}`}>
         <div className={styles.brand}>
           <div className={styles.brandLeft}>
-            <div className={styles.brandIcon}><LeoMark /></div>
+            <div className={styles.brandIcon}>
+              <LeoMark />
+            </div>
             <div className={styles.brandText}>
               <div className={styles.logoRow}>
                 <span className={styles.logo}>Leo</span>
@@ -105,11 +122,17 @@ export default function Sidebar({ isOpen, onCloseMobile, variant = 'owner' }) {
 
         <nav className={styles.nav}>
           <div className={styles.navSectionLabel}>MAIN MENU</div>
+
           {links.map(({ to, label, icon, children }) => {
             if (children) {
-              const isActive = children.some(({ to: childTo }) => childTo === location.pathname);
+              const isActive = children.some(
+                ({ to: childTo }) => childTo === location.pathname
+              );
+
               const isExpanded = Boolean(expandedGroups[label]);
-              const groupId = `sidebar-group-${label.replaceAll(/[^a-zA-Z0-9]+/g, '-').toLowerCase()}`;
+              const groupId = `sidebar-group-${label
+                .replaceAll(/[^a-zA-Z0-9]+/g, '-')
+                .toLowerCase()}`;
 
               return (
                 <div className={styles.group} key={label}>
@@ -129,6 +152,7 @@ export default function Sidebar({ isOpen, onCloseMobile, variant = 'owner' }) {
                       {isExpanded ? <MdExpandLess /> : <MdExpandMore />}
                     </span>
                   </button>
+
                   {isExpanded && (
                     <div className={styles.groupChildren} id={groupId}>
                       {children.map((child) => (
@@ -167,15 +191,28 @@ export default function Sidebar({ isOpen, onCloseMobile, variant = 'owner' }) {
         </nav>
 
         <div className={styles.footer}>
-          <div className={styles.userCard} title={`${user?.username || 'User'} (${user?.role || 'STAFF'})`}>
-            <div className={styles.avatar}>{getInitials(user?.username)}</div>
+          <div
+            className={styles.userCard}
+            title={`${user?.username || 'User'} (${user?.role || 'STAFF'})`}
+          >
+            <div className={styles.avatar}>
+              {getInitials(user?.username)}
+            </div>
             <div className={styles.userInfo}>
-              <span className={styles.userName}>{user?.username || 'User'}</span>
-              <span className={styles.userRole}>{user?.role || 'STAFF'}</span>
+              <span className={styles.userName}>
+                {user?.username || 'User'}
+              </span>
+              <span className={styles.userRole}>
+                {user?.role || 'STAFF'}
+              </span>
             </div>
           </div>
 
-          <button className={styles.logoutBtn} onClick={handleLogout} title="Log Out">
+          <button
+            className={styles.logoutBtn}
+            onClick={handleLogout}
+            title="Log Out"
+          >
             <MdLogout size={18} />
             <span>Sign Out</span>
           </button>

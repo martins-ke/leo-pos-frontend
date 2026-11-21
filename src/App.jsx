@@ -7,6 +7,7 @@ import { ProtectedRoute } from './components/routing/ProtectedRoute';
 import Layout from './components/layout/Layout'; 
 import Spinner from './components/Spinner';
 import PageLoadingFallback from './components/PageLoadingFallback';
+import HelpCenter from './features/help/HelpCenter';
 
 const LandingPage = lazy(() => import('./features/LandingPage'));
 const LoginPage = lazy(() => import('./features/auth/LoginPage'));
@@ -92,6 +93,8 @@ export default function App() {
               <Route path="/expenses" element={<Navigate to="/owner/expenses" replace />} />
               <Route path="/stock-use" element={<Navigate to="/owner/stock-use" replace />} />
               <Route path="/accounts" element={<Navigate to="/owner/accounts" replace />} />
+
+              <Route path="/help" element={<HelpCenter />} />
 
               {/* Unknown Routes */}
               <Route path="*" element={<Navigate to="/" replace />} />
