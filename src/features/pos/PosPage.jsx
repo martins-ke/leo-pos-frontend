@@ -6,9 +6,9 @@ import PaginationControls from '../../components/navigation/PaginationControls';
 import { useFeedback } from '../../context/useFeedback';
 import {
   MdSearch, MdDelete, MdPrint,
-  MdClose, MdStore, MdCreditCard,
+  MdClose, MdStore, MdAccountBalanceWallet,
   MdPayments, MdPhoneIphone, MdRefresh,
-  MdCheckCircle // Added for the approve button
+  MdCheckCircle
 } from 'react-icons/md';
 import ExpandingSelect from '../../components/forms/ExpandingSelect';
 import styles from './PosPage.module.css';
@@ -32,8 +32,8 @@ export default function PosPage() {
   const [customerHasNext, setCustomerHasNext] = useState(false);
   const [cart, setCart] = useState([]);
   const [amountTendered, setAmountTendered] = useState('');
-  const [paymentMethod, setPaymentMethod] = useState('MPESA');
-  const [recordAsDebt, setRecordAsDebt] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState('CASH');
+  const [recordAsDebt, setRecordAsDebt] = useState(false); // Kept exactly as before
   const [lastSale, setLastSale] = useState(null);
   const [loading, setLoading] = useState(false);
   const [shopsLoading, setShopsLoading] = useState(true);
@@ -227,7 +227,6 @@ export default function PosPage() {
     if (!selectedCustomerId) return;
     setLoading(true);
     try {
-      // Note: Adjust endpoint if needed to match your backend
       const res = await api.patch(`/customers/${selectedCustomerId}/approve-credit`, {});
       if (res.success) {
         setSelectedCustomerCreditEligible(true);
@@ -319,8 +318,6 @@ export default function PosPage() {
   }, [catalogPageCount]);
 
   const activeShopObj = shops.find(s => s.id === selectedShopId) || shops[0];
-  
-  // Determine if user has admin privileges to approve debt
   const canApproveDebt = user?.role === 'OWNER' || user?.role === 'SUPER_ADMIN';
 
   if (shopsLoading) {
@@ -374,10 +371,6 @@ export default function PosPage() {
             onChange={value => {
               if (value === selectedShopId) return;
               clearCart();
-              setAmountTendered('');
-              setPaymentMethod('CASH');
-              setRecordAsDebt(false);
-              setMobileCartOpen(false);
               setSearchTerm('');
               setSelectedShopId(value);
               setCatalogPage(0);
@@ -565,20 +558,32 @@ export default function PosPage() {
 
           {/* Checkout Controls */}
           <div className={styles.checkoutFooter}>
-            {!recordAsDebt && (
-              <div className={styles.methodSelector}>
-                <button type="button" className={`${styles.methodBtn} ${paymentMethod === 'CASH' ? styles.methodActive : ''}`} onClick={() => setPaymentMethod('CASH')}>
-                  <MdPayments size={18} /><span>Cash</span>
-                </button>
-                <button type="button" className={`${styles.methodBtn} ${paymentMethod === 'MPESA' ? styles.methodActive : ''}`} onClick={() => { setPaymentMethod('MPESA'); setAmountTendered(grandTotal.toString()); }}>
-                  <MdPhoneIphone size={18} /><span>M-Pesa</span>
-                </button>
-                <button type="button" className={`${styles.methodBtn} ${paymentMethod === 'CARD' ? styles.methodActive : ''}`} onClick={() => { setPaymentMethod('CARD'); setAmountTendered(grandTotal.toString()); }}>
-                  <MdCreditCard size={18} /><span>Card</span>
-                </button>
-              </div>
-            )}
+            {/* Payment Method Selector: Cash, M-Pesa, Debt */}
+            <div className={styles.methodSelector}>
+              <button
+                type="button"
+                className={`${styles.methodBtn} ${(!recordAsDebt && paymentMethod === 'CASH') ? styles.methodActive : ''}`}
+                onClick={() => { setPaymentMethod('CASH'); setRecordAsDebt(false); }}
+              >
+                <MdPayments size={18} /><span>Cash</span>
+              </button>
+              <button
+                type="button"
+                className={`${styles.methodBtn} ${(!recordAsDebt && paymentMethod === 'MPESA') ? styles.methodActive : ''}`}
+                onClick={() => { setPaymentMethod('MPESA'); setAmountTendered(grandTotal.toString()); setRecordAsDebt(false); }}
+              >
+                <MdPhoneIphone size={18} /><span>M-Pesa</span>
+              </button>
+              <button
+                type="button"
+                className={`${styles.methodBtn} ${recordAsDebt ? styles.methodActive : ''}`}
+                onClick={() => { setRecordAsDebt(true); setAmountTendered('0'); }}
+              >
+                <MdAccountBalanceWallet size={18} /><span>Debt</span>
+              </button>
+            </div>
 
+            {/* Cash Presets */}
             {!recordAsDebt && paymentMethod === 'CASH' && (
               <div className={styles.cashPresets}>
                 <button type="button" onClick={() => handleQuickCash('EXACT')}>Exact</button>
@@ -589,6 +594,7 @@ export default function PosPage() {
               </div>
             )}
 
+            {/* Totals & Tendered */}
             <div className={styles.summaryBox}>
               <div className={styles.totalRow}>
                 <span>TOTAL DUE</span>
@@ -612,49 +618,43 @@ export default function PosPage() {
               )}
             </div>
 
-            {recordAsDebt ? (
-              <>
-                <div className={styles.debtCheckoutNotice}>
-                  <div>
-                    This sale will be linked to {selectedCustomerName || 'the selected customer'} as an unpaid debt.
-                    {selectedCustomerCreditEligible ? '' : ' Select a credit-approved customer to continue.'}
-                  </div>
-                  {/* Approve Debt Button (Admin Only) */}
-                  {!selectedCustomerCreditEligible && selectedCustomerId && canApproveDebt && (
-                    <button
-                      type="button"
-                      className={styles.approveDebtBtn}
-                      onClick={handleApproveCredit}
-                      disabled={loading}
-                    >
-                      <MdCheckCircle size={16} /> Approve Customer for Credit
-                    </button>
-                  )}
+            {/* Debt Notice & Admin Approval Button */}
+            {recordAsDebt && (
+              <div className={styles.debtCheckoutNotice}>
+                <div>
+                  This sale will be linked to {selectedCustomerName || 'the selected customer'} as an unpaid debt.
+                  {selectedCustomerCreditEligible ? '' : ' Select a credit-approved customer to continue.'}
                 </div>
-                <div className={styles.checkoutActions}>
-                  <button type="button" className={styles.debtCancelBtn} onClick={() => setRecordAsDebt(false)} disabled={loading}>
-                    Cancel
-                  </button>
+                {!selectedCustomerCreditEligible && selectedCustomerId && canApproveDebt && (
                   <button
                     type="button"
-                    className={styles.checkoutBtn}
-                    onClick={() => handleCheckout(true)}
-                    disabled={cart.length === 0 || loading || !selectedCustomerId || !selectedCustomerCreditEligible}
+                    className={styles.approveDebtBtn}
+                    onClick={handleApproveCredit}
+                    disabled={loading}
                   >
-                    {loading ? <><span className={styles.spinner} /> Recording…</> : `Record Debt · KES ${grandTotal.toLocaleString()}`}
+                    <MdCheckCircle size={16} /> Approve Customer for Credit
                   </button>
-                </div>
-              </>
-            ) : (
-              <div className={styles.checkoutActions}>
-                <button type="button" className={styles.checkoutBtn} onClick={() => handleCheckout(false)} disabled={cart.length === 0 || loading}>
-                  {loading ? <><span className={styles.spinner} /> Processing…</> : `COMPLETE SALE: KES ${grandTotal.toLocaleString()}`}
-                </button>
-                <button type="button" className={styles.debtToggleBtn} onClick={() => setRecordAsDebt(true)} disabled={cart.length === 0 || loading} aria-pressed={false}>
-                  Debt
-                </button>
+                )}
               </div>
             )}
+
+            {/* Single Checkout Button with Dynamic Text */}
+            <div className={styles.checkoutActions}>
+              <button
+                type="button"
+                className={styles.checkoutBtn}
+                onClick={() => handleCheckout(recordAsDebt)}
+                disabled={cart.length === 0 || loading || (recordAsDebt && (!selectedCustomerId || !selectedCustomerCreditEligible))}
+              >
+                {loading ? (
+                  <><span className={styles.spinner} /> Processing…</>
+                ) : recordAsDebt ? (
+                  `Record Debt · KES ${grandTotal.toLocaleString()}`
+                ) : (
+                  `COMPLETE SALE: KES ${grandTotal.toLocaleString()}`
+                )}
+              </button>
+            </div>
           </div>
         </div>
       </div>
