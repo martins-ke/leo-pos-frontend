@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { api } from '../../api/api';
 import { invalidateDashboardData } from '../../api/queryClient';
 import TableSkeleton from '../../components/loading/TableSkeleton';
@@ -20,13 +20,23 @@ const styles = { ...sharedStyles, ...pageStyles };
 
 const PAGE_SIZE = 20;
 
+const INITIAL_FORM = {
+  name: '',
+  buyingPrice: '',
+  sellingPrice: '',
+  quantityInStock: '',
+  minStockLevel: '5',
+  unit: 'pcs',
+  categoryId: ''
+};
+
 export default function ProductsPage() {
   const { notify, beginSaving, confirm } = useFeedback();
   const [products, setProducts] = useState([]);
   const [shops, setShops] = useState([]);
   const [categories, setCategories] = useState([]);
   const [categorySuggestions, setCategorySuggestions] = useState([]);
-  const [shopId, setShopId] = useState('');
+  const [shopId, setShopId] = useState(''); // Defaults to 'All Outlets'
   const [searchTerm, setSearchTerm] = useState('');
   const [stockFilter, setStockFilter] = useState('ALL');
   const [categoryFilter, setCategoryFilter] = useState('');
@@ -43,16 +53,7 @@ export default function ProductsPage() {
   const [creatingCategory, setCreatingCategory] = useState(false);
 
   // Form State
-  const initialForm = {
-    name: '',
-    buyingPrice: '',
-    sellingPrice: '',
-    quantityInStock: '',
-    minStockLevel: '5',
-    unit: 'pcs',
-    categoryId: ''
-  };
-  const [form, setForm] = useState(initialForm);
+  const [form, setForm] = useState(INITIAL_FORM);
 
   // Alerts
   const [loading, setLoading] = useState(false);
@@ -103,9 +104,7 @@ export default function ProductsPage() {
       const res = await api.get('/shops');
       if (res.success && res.body && res.body.length > 0) {
         setShops(res.body);
-        if (!shopId) {
-          setShopId(res.body[0].id);
-        }
+        // Removed the auto-select logic to allow '' (All Outlets) to persist
       } else if (!res.success) showAlert('error', res.message || 'Failed to load shops');
     } catch {
       showAlert('error', 'Could not connect to the server while loading shops');
@@ -170,28 +169,39 @@ export default function ProductsPage() {
 
   const handleCreateOrUpdate = async (e) => {
     e.preventDefault();
+    
+    const buyingPrice = parseFloat(form.buyingPrice);
+    const sellingPrice = parseFloat(form.sellingPrice);
+    const quantity = parseFloat(form.quantityInStock);
+    const minStock = parseFloat(form.minStockLevel);
+
+    if (isNaN(buyingPrice) || isNaN(sellingPrice) || isNaN(quantity) || isNaN(minStock)) {
+      showAlert('error', 'Please enter valid numbers for prices, quantity, and stock levels.');
+      return;
+    }
+
+    if (sellingPrice < buyingPrice) {
+      showAlert('error', 'Selling price must be greater than or equal to buying price.');
+      return;
+    }
+
     const payload = {
       name: form.name.trim(),
-      buyingPrice: parseFloat(form.buyingPrice),
-      sellingPrice: parseFloat(form.sellingPrice),
-      quantityInStock: parseFloat(form.quantityInStock),
-      minStockLevel: parseFloat(form.minStockLevel),
+      buyingPrice,
+      sellingPrice,
+      quantityInStock: quantity,
+      minStockLevel: minStock,
       unit: form.unit.trim(),
-      categoryId: editingProduct?.category?.active === false
-        && editingProduct.category.id === form.categoryId
+      categoryId: editingProduct?.category?.active === false && editingProduct.category.id === form.categoryId
         ? ''
         : form.categoryId,
       clearCategory: Boolean(editingProduct && !form.categoryId)
     };
 
-    if (payload.sellingPrice < payload.buyingPrice) {
-      showAlert('error', 'Selling price must be greater than or equal to buying price.');
-      return;
-    }
-
     const saveStatus = beginSaving({
       title: editingProduct ? 'Updating product' : 'Creating product',
     });
+
     try {
       if (editingProduct) {
         const res = await api.put(`/products/${editingProduct.id}`, payload);
@@ -199,7 +209,7 @@ export default function ProductsPage() {
           saveStatus.complete({ message: `Product "${payload.name}" was updated.` });
           setEditingProduct(null);
           setShowAddModal(false);
-          setForm(initialForm);
+          setForm(INITIAL_FORM);
           fetchProducts();
           invalidateDashboardData();
         } else {
@@ -207,11 +217,15 @@ export default function ProductsPage() {
         }
       } else {
         const targetShop = shopId || (shops[0]?.id || '');
+        if (!targetShop) {
+          saveStatus.fail({ message: 'You must create a shop before adding products.' });
+          return;
+        }
         const res = await api.post(`/products/${targetShop}`, payload);
         if (res.success) {
           saveStatus.complete({ message: `Product "${payload.name}" was created.` });
           setShowAddModal(false);
-          setForm(initialForm);
+          setForm(INITIAL_FORM);
           fetchProducts();
           invalidateDashboardData();
         } else {
@@ -281,7 +295,7 @@ export default function ProductsPage() {
       buyingPrice: p.buying_price || p.buyingPrice || '',
       sellingPrice: p.selling_price || p.sellingPrice || '',
       quantityInStock: p.quantity,
-      minStockLevel: p.min_stock_level || p.minStockLevel || '5',
+      minStockLevel: p.min_stock_level ?? p.minStockLevel ?? '5',
       unit: p.unit || 'pcs',
       categoryId: p.category?.id || ''
     });
@@ -304,19 +318,25 @@ export default function ProductsPage() {
       : [])
   ];
 
-  const filteredProducts = products.filter(p => {
-    const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = !categoryFilter || p.category?.id === categoryFilter;
-    const matchesBase = matchesSearch && matchesCategory;
-    const isOut = p.quantity <= 0;
-    const isLow = p.quantity > 0 && p.quantity <= (p.min_stock_level || p.minStockLevel);
-    const isHealthy = p.quantity > (p.min_stock_level || p.minStockLevel);
+  // PERFORMANCE: Memoize filtering
+  const filteredProducts = useMemo(() => {
+    return products.filter(p => {
+      const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesCategory = !categoryFilter || p.category?.id === categoryFilter;
+      const matchesBase = matchesSearch && matchesCategory;
+      
+      const minStock = p.min_stock_level ?? p.minStockLevel ?? 5;
+      const isOut = p.quantity <= 0;
+      const isLow = p.quantity > 0 && p.quantity <= minStock;
+      const isHealthy = p.quantity > minStock;
 
-    if (stockFilter === 'LOW') return matchesBase && isLow;
-    if (stockFilter === 'OUT') return matchesBase && isOut;
-    if (stockFilter === 'HEALTHY') return matchesBase && isHealthy;
-    return matchesBase;
-  });
+      if (stockFilter === 'LOW') return matchesBase && isLow;
+      if (stockFilter === 'OUT') return matchesBase && isOut;
+      if (stockFilter === 'HEALTHY') return matchesBase && isHealthy;
+      return matchesBase;
+    });
+  }, [products, searchTerm, categoryFilter, stockFilter]);
+
   const pageCount = Math.ceil(filteredProducts.length / PAGE_SIZE);
   const visibleProducts = filteredProducts.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
 
@@ -324,9 +344,17 @@ export default function ProductsPage() {
     setPage(current => Math.min(current, Math.max(0, pageCount - 1)));
   }, [pageCount]);
 
-  const totalStockValue = products.reduce((acc, p) => acc + ((p.selling_price || p.sellingPrice || 0) * p.quantity), 0);
-  const totalCostValue = products.reduce((acc, p) => acc + ((p.buying_price || p.buyingPrice || 0) * p.quantity), 0);
-  const potentialProfit = totalStockValue - totalCostValue;
+  // PERFORMANCE: Memoize KPI calculations
+  const { totalStockValue, totalCostValue, potentialProfit } = useMemo(() => {
+    let stock = 0;
+    let cost = 0;
+    for (const p of products) {
+      const qty = p.quantity || 0;
+      stock += (parseFloat(p.selling_price || p.sellingPrice || 0) * qty);
+      cost += (parseFloat(p.buying_price || p.buyingPrice || 0) * qty);
+    }
+    return { totalStockValue: stock, totalCostValue: cost, potentialProfit: stock - cost };
+  }, [products]);
 
   return (
     <div className={`${styles.container} ${styles.mobilePage}`}>
@@ -355,10 +383,11 @@ export default function ProductsPage() {
               {products.length} {products.length === 1 ? 'Product' : 'Products'}
             </span>
             <button
+              type="button"
               className={styles.launchPosBtn}
               onClick={() => {
                 setEditingProduct(null);
-                setForm(initialForm);
+                setForm(INITIAL_FORM);
                 setFormStep(0);
                 setShowCreateCategory(false);
                 setShowAddModal(true);
@@ -370,7 +399,6 @@ export default function ProductsPage() {
           </div>
         </div>
       </div>
-
 
       {/* Inventory KPI Summary */}
       <div className={`${styles.kpiGrid} ${styles.inventoryKpiGrid}`}>
@@ -412,10 +440,10 @@ export default function ProductsPage() {
             placeholder="Search products by name..."
             value={searchTerm}
             onChange={e => { setSearchTerm(e.target.value); setPage(0); }}
-            style={{ border: 'none', background: 'transparent', width: '100%', fontSize: 'var(--font-size-base)', color: 'var(--text-main)' }}
+            style={{ border: 'none', background: 'transparent', width: '100%', fontSize: 'var(--font-size-base)', color: 'var(--text-main)', outline: 'none' }}
           />
           {searchTerm && (
-            <button onClick={() => setSearchTerm('')} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}>
+            <button type="button" onClick={() => setSearchTerm('')} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}>
               <MdClose size={16} />
             </button>
           )}
@@ -449,6 +477,7 @@ export default function ProductsPage() {
             { id: 'OUT', label: 'Depleted' }
           ].map(f => (
             <button
+              type="button"
               key={f.id}
               onClick={() => { setStockFilter(f.id); setPage(0); }}
               className={`${stockFilter === f.id ? styles.launchPosBtn : styles.viewRowBtn} ${styles.stockFilterButton}`}
@@ -483,7 +512,7 @@ export default function ProductsPage() {
               ) : filteredProducts.length === 0 ? (
                 <tr>
                   <td colSpan="10" className={styles.emptyTable}>
-                    {loading ? '' : 'No products found. Click "Add New Product" to populate your catalog!'}
+                    {loading ? '' : 'No products found. Click "New Product" to populate your catalog!'}
                   </td>
                 </tr>
               ) : (
@@ -491,8 +520,10 @@ export default function ProductsPage() {
                   const buying = parseFloat(p.buying_price || p.buyingPrice || 0);
                   const selling = parseFloat(p.selling_price || p.sellingPrice || 0);
                   const margin = buying > 0 ? Math.round(((selling - buying) / buying) * 100) : 0;
+                  const minStock = p.min_stock_level ?? p.minStockLevel ?? 5;
+                  
                   const isOutOfStock = p.quantity <= 0;
-                  const isLow = p.quantity > 0 && p.quantity <= (p.min_stock_level || p.minStockLevel);
+                  const isLow = p.quantity > 0 && p.quantity <= minStock;
 
                   return (
                     <tr key={p.id}>
@@ -536,6 +567,7 @@ export default function ProductsPage() {
                       <td style={{ textAlign: 'right' }}>
                         <div style={{ display: 'inline-flex', gap: '6px' }}>
                           <button
+                            type="button"
                             onClick={() => {
                               setRestockProduct(p);
                               setRestockQty('');
@@ -546,6 +578,7 @@ export default function ProductsPage() {
                             <MdAddCircleOutline size={14} /> Restock
                           </button>
                           <button
+                            type="button"
                             onClick={() => openEditModal(p)}
                             className={styles.viewRowBtn}
                             title="Edit Product"
@@ -553,6 +586,7 @@ export default function ProductsPage() {
                             <MdEdit size={14} />
                           </button>
                           <button
+                            type="button"
                             onClick={() => handleDelete(p.id, p.name)}
                             className={styles.viewRowBtn}
                             style={{ color: 'var(--danger-text)', borderColor: 'var(--danger-border)' }}
@@ -597,7 +631,7 @@ export default function ProductsPage() {
                 required
                 value={form.name}
                 onChange={e => setForm({ ...form, name: e.target.value })}
-                style={{ width: '100%', padding: '9px 12px', border: '1px solid var(--border-strong)', borderRadius: '8px', fontSize: 'var(--font-size-base)', background: 'var(--bg-input)', color: 'var(--text-main)' }}
+                style={{ width: '100%', padding: '9px 12px', border: '1px solid var(--border-strong)', borderRadius: '8px', fontSize: 'var(--font-size-base)', background: 'var(--bg-input)', color: 'var(--text-main)', outline: 'none' }}
               />
             </label>
 
@@ -633,7 +667,7 @@ export default function ProductsPage() {
                       placeholder="e.g. Beverages"
                       value={newCategoryName}
                       onChange={e => setNewCategoryName(e.target.value)}
-                      style={{ width: '100%', padding: '9px 12px', border: '1px solid var(--border-strong)', borderRadius: '8px', fontSize: 'var(--font-size-base)', background: 'var(--bg-input)', color: 'var(--text-main)' }}
+                      style={{ width: '100%', padding: '9px 12px', border: '1px solid var(--border-strong)', borderRadius: '8px', fontSize: 'var(--font-size-base)', background: 'var(--bg-input)', color: 'var(--text-main)', outline: 'none' }}
                     />
                     <datalist id="product-category-suggestions">
                       {categorySuggestions.map(suggestion => (
@@ -659,11 +693,11 @@ export default function ProductsPage() {
           <div style={{ display: 'grid', gap: '14px' }}>
             <label style={{ display: 'grid', gap: '4px', color: 'var(--text-secondary)', fontWeight: 600 }}>
               Cost Price (KES) *
-              <input type="number" step="0.01" min="0" required placeholder="0.00" value={form.buyingPrice} onChange={e => setForm({ ...form, buyingPrice: e.target.value })} style={{ width: '100%', padding: '9px 12px', border: '1px solid var(--border-strong)', borderRadius: '8px', fontSize: 'var(--font-size-base)', background: 'var(--bg-input)', color: 'var(--text-main)' }} />
+              <input type="number" step="0.01" min="0" required placeholder="0.00" value={form.buyingPrice} onChange={e => setForm({ ...form, buyingPrice: e.target.value })} style={{ width: '100%', padding: '9px 12px', border: '1px solid var(--border-strong)', borderRadius: '8px', fontSize: 'var(--font-size-base)', background: 'var(--bg-input)', color: 'var(--text-main)', outline: 'none' }} />
             </label>
             <label style={{ display: 'grid', gap: '4px', color: 'var(--text-secondary)', fontWeight: 600 }}>
               Selling Price (KES) *
-              <input type="number" step="0.01" min="0" required placeholder="0.00" value={form.sellingPrice} onChange={e => setForm({ ...form, sellingPrice: e.target.value })} style={{ width: '100%', padding: '9px 12px', border: '1px solid var(--border-strong)', borderRadius: '8px', fontSize: 'var(--font-size-base)', background: 'var(--bg-input)', color: 'var(--text-main)' }} />
+              <input type="number" step="0.01" min="0" required placeholder="0.00" value={form.sellingPrice} onChange={e => setForm({ ...form, sellingPrice: e.target.value })} style={{ width: '100%', padding: '9px 12px', border: '1px solid var(--border-strong)', borderRadius: '8px', fontSize: 'var(--font-size-base)', background: 'var(--bg-input)', color: 'var(--text-main)', outline: 'none' }} />
             </label>
           </div>
         )}
@@ -671,7 +705,7 @@ export default function ProductsPage() {
           <div style={{ display: 'grid', gap: '14px' }}>
             <label style={{ display: 'grid', gap: '4px', color: 'var(--text-secondary)', fontWeight: 600 }}>
               Initial Quantity *
-              <input type="number" step="any" min="0" required placeholder="e.g. 50" value={form.quantityInStock} onChange={e => setForm({ ...form, quantityInStock: e.target.value })} style={{ width: '100%', padding: '9px 12px', border: '1px solid var(--border-strong)', borderRadius: '8px', fontSize: 'var(--font-size-base)', background: 'var(--bg-input)', color: 'var(--text-main)' }} />
+              <input type="number" step="any" min="0" required placeholder="e.g. 50" value={form.quantityInStock} onChange={e => setForm({ ...form, quantityInStock: e.target.value })} style={{ width: '100%', padding: '9px 12px', border: '1px solid var(--border-strong)', borderRadius: '8px', fontSize: 'var(--font-size-base)', background: 'var(--bg-input)', color: 'var(--text-main)', outline: 'none' }} />
             </label>
             <label style={{ display: 'grid', gap: '4px', color: 'var(--text-secondary)', fontWeight: 600 }}>
               Unit of Measure *
@@ -686,7 +720,7 @@ export default function ProductsPage() {
             </label>
             <label style={{ display: 'grid', gap: '4px', color: 'var(--text-secondary)', fontWeight: 600 }}>
               Low Stock Alert Level *
-              <input type="number" min="0" required placeholder="e.g. 5" value={form.minStockLevel} onChange={e => setForm({ ...form, minStockLevel: e.target.value })} style={{ width: '100%', padding: '9px 12px', border: '1px solid var(--border-strong)', borderRadius: '8px', fontSize: 'var(--font-size-base)', background: 'var(--bg-input)', color: 'var(--text-main)' }} />
+              <input type="number" min="0" required placeholder="e.g. 5" value={form.minStockLevel} onChange={e => setForm({ ...form, minStockLevel: e.target.value })} style={{ width: '100%', padding: '9px 12px', border: '1px solid var(--border-strong)', borderRadius: '8px', fontSize: 'var(--font-size-base)', background: 'var(--bg-input)', color: 'var(--text-main)', outline: 'none' }} />
             </label>
           </div>
         )}
@@ -698,7 +732,7 @@ export default function ProductsPage() {
           <div className={styles.modalContent} style={{ maxWidth: '380px' }}>
             <div className={styles.modalHeader}>
               <h3>Quick Restock: {restockProduct.name}</h3>
-              <button className={styles.closeBtn} onClick={() => setRestockProduct(null)}>
+              <button type="button" className={styles.closeBtn} onClick={() => setRestockProduct(null)}>
                 <MdClose size={20} />
               </button>
             </div>
@@ -722,7 +756,7 @@ export default function ProductsPage() {
                   placeholder="e.g. 20"
                   value={restockQty}
                   onChange={e => setRestockQty(e.target.value)}
-                  style={{ width: '100%', padding: '10px 12px', border: '1px solid var(--border-strong)', borderRadius: '8px', fontSize: 'var(--font-size-lg)', background: 'var(--bg-input)', color: 'var(--text-main)' }}
+                  style={{ width: '100%', padding: '10px 12px', border: '1px solid var(--border-strong)', borderRadius: '8px', fontSize: 'var(--font-size-lg)', background: 'var(--bg-input)', color: 'var(--text-main)', outline: 'none' }}
                 />
               </div>
 
