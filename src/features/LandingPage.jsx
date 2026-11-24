@@ -84,13 +84,11 @@ const PRICING_TIERS = [
       'Up to 3 Cashier / Staff Logins',
       'Unlimited Products & Barcodes',
       'High-Speed POS Register',
-      'Thermal Receipt Printing (ESC/POS)',
       'Customer Debt (Madeni) Ledger',
       'Daily Sales & Expense Reports',
-      'WhatsApp & Email Support',
     ],
     cta: 'Start 14-Day Free Trial',
-    popular: false,
+    popular: true,
   },
   {
     name: 'Business Pro',
@@ -109,7 +107,7 @@ const PRICING_TIERS = [
       'Priority 24/7 Dedicated Support',
     ],
     cta: 'Start 14-Day Free Trial',
-    popular: true,
+    popular: false,
   },
   {
     name: 'Enterprise Chain',
@@ -207,10 +205,10 @@ export default function LandingPage() {
               </p>
 
               <div className={styles.heroCtaGroup}>
-                <Link to="/register" className={styles.heroCtaOrange}>
-                  <span>Start 14-Day Free Trial</span>
+                <div className={styles.heroCtaOrange}>
+                  <a href = "#pricing">Start 14-Day Free Trial</a>
                   <MdArrowForward />
-                </Link>
+                </div>
                 <Link to="/login" className={styles.heroCtaGlass}>
                   <MdPointOfSale />
                   <span>Launch POS</span>
@@ -545,6 +543,7 @@ export default function LandingPage() {
           <p className={styles.sectionSubtitle}>
             All plans include a full 14-day free trial. Scale as your shop network grows.
           </p>
+          <h2>Choose your plan below</h2>
         </div>
 
         <div className={styles.pricingGrid}>

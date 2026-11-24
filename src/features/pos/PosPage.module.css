@@ -79,31 +79,6 @@
   color: var(--text-main);
 }
 
-.alertError {
-  background: var(--danger-bg);
-  color: var(--danger-text);
-  padding: var(--space-2) var(--space-3);
-  border-radius: var(--radius-sm-plus);
-  font-size: var(--font-size-md);
-  font-weight: 500;
-  border: var(--border-width) solid var(--danger-border);
-  flex-shrink: 0;
-}
-
-.alertSuccess {
-  background: var(--success-bg);
-  color: var(--success-text);
-  padding: var(--space-2) var(--space-3);
-  border-radius: var(--radius-sm-plus);
-  font-size: var(--font-size-md);
-  font-weight: 500;
-  display: flex;
-  align-items: center;
-  gap: var(--space-1-5);
-  border: var(--border-width) solid var(--success-border);
-  flex-shrink: 0;
-}
-
 .posGrid {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 390px;
@@ -765,6 +740,35 @@
   color: var(--warning-text);
   font-size: var(--font-size-sm);
   line-height: 1.4;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.approveDebtBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1);
+  background: var(--primary);
+  color: var(--text-on-primary);
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: var(--space-1-5) var(--space-2);
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  cursor: pointer;
+  align-self: flex-start;
+  transition: background 0.15s ease;
+}
+
+.approveDebtBtn:hover:not(:disabled) {
+  background: var(--primary-hover);
+}
+
+.approveDebtBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .checkoutActions .debtCancelBtn { min-width: 5rem; }
@@ -1065,7 +1069,6 @@
     pointer-events: auto;
   }
 
-  /* ═══ CLEAN MOBILE CART BAR ═══════════════════════════ */
   .mobileCartBar {
     display: flex;
     position: fixed;
@@ -1096,49 +1099,6 @@
     box-shadow:
       0 4px 12px -6px rgba(15, 23, 42, 0.16),
       0 1px 3px -1px rgba(15, 23, 42, 0.06);
-  }
-
-  .mobileCartIcon {
-    position: relative;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 40px;
-    height: 40px;
-    background: var(--primary-light);
-    color: var(--primary);
-    border-radius: 12px;
-    flex-shrink: 0;
-  }
-
-  .mobileCartBadge {
-    position: absolute;
-    top: -5px;
-    right: -5px;
-    min-width: 20px;
-    height: 20px;
-    padding: 0 6px;
-    background: var(--primary);
-    color: var(--text-on-primary);
-    border-radius: 10px;
-    font-size: 11px;
-    font-weight: 800;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-variant-numeric: tabular-nums;
-    line-height: 1;
-    letter-spacing: -0.02em;
-    box-shadow: 0 0 0 2px var(--bg-card);
-  }
-
-  .mobileCartInfo {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 2px;
-    flex: 1;
-    min-width: 0;
   }
 
   .mobileCartCount {
@@ -1184,21 +1144,11 @@
   .mobileCartBar:active .mobileCartView {
     background: var(--primary-hover);
   }
-
-  .mobileCartView svg {
-    transition: transform 0.15s ease;
-  }
 }
 
 @keyframes mobileCartBarSlideUp {
-  from {
-    transform: translateY(120%);
-    opacity: 0;
-  }
-  to {
-    transform: translateY(0);
-    opacity: 1;
-  }
+  from { transform: translateY(120%); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
 }
 
 @media (min-width: 901px) {
@@ -1229,12 +1179,6 @@
     min-height: 60px;
     border-radius: 14px;
     gap: 10px;
-  }
-
-  .mobileCartIcon {
-    width: 36px;
-    height: 36px;
-    border-radius: 10px;
   }
 
   .mobileCartTotal { font-size: 16px; }

@@ -7,11 +7,10 @@ import { useFeedback } from '../../context/useFeedback';
 import {
   MdSearch, MdDelete, MdPrint,
   MdClose, MdStore, MdCreditCard,
-  MdPayments, MdPhoneIphone, MdRefresh
+  MdPayments, MdPhoneIphone, MdRefresh,
+  MdCheckCircle // Added for the approve button
 } from 'react-icons/md';
 import ExpandingSelect from '../../components/forms/ExpandingSelect';
-import { useVoiceAssistant, VoiceAssistantHud } from '../../modules/voice';
-import { getVoiceFeatureFlag, setVoiceFeatureFlag } from '../../modules/voice/voiceFeature';
 import styles from './PosPage.module.css';
 
 const CATALOG_PAGE_SIZE = 24;
@@ -33,12 +32,11 @@ export default function PosPage() {
   const [customerHasNext, setCustomerHasNext] = useState(false);
   const [cart, setCart] = useState([]);
   const [amountTendered, setAmountTendered] = useState('');
-  const [paymentMethod, setPaymentMethod] = useState('CASH');
+  const [paymentMethod, setPaymentMethod] = useState('MPESA');
   const [recordAsDebt, setRecordAsDebt] = useState(false);
   const [lastSale, setLastSale] = useState(null);
   const [loading, setLoading] = useState(false);
   const [shopsLoading, setShopsLoading] = useState(true);
-  const [voiceEnabled, setVoiceEnabled] = useState(() => getVoiceFeatureFlag());
   const [mobileCartOpen, setMobileCartOpen] = useState(false);
   const searchInputRef = useRef(null);
 
@@ -128,7 +126,7 @@ export default function PosPage() {
     };
   }, [selectedShopId, customerPage]);
 
-  // Auto-focus search on mount — barcode scanner ready immediately
+  // Auto-focus search on mount
   useEffect(() => {
     searchInputRef.current?.focus();
   }, []);
@@ -179,7 +177,6 @@ export default function PosPage() {
       setCart([{ ...product, qty: step }, ...cart]);
     }
 
-    // Refocus search for scanner workflow — desktop only (touch would open keyboard)
     if (typeof window !== 'undefined' && window.matchMedia('(pointer: fine)').matches) {
       searchInputRef.current?.focus();
     }
@@ -223,6 +220,26 @@ export default function PosPage() {
       setAmountTendered(grandTotal.toString());
     } else {
       setAmountTendered(amount.toString());
+    }
+  };
+
+  const handleApproveCredit = async () => {
+    if (!selectedCustomerId) return;
+    setLoading(true);
+    try {
+      // Note: Adjust endpoint if needed to match your backend
+      const res = await api.patch(`/customers/${selectedCustomerId}/approve-credit`, {});
+      if (res.success) {
+        setSelectedCustomerCreditEligible(true);
+        setCustomers(prev => prev.map(c => String(c.id) === String(selectedCustomerId) ? { ...c, creditEligible: true } : c));
+        notify({ type: 'success', message: 'Customer approved for credit.' });
+      } else {
+        notify({ type: 'error', message: res.message || 'Failed to approve customer.' });
+      }
+    } catch {
+      notify({ type: 'error', message: 'Network error approving customer.' });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -287,81 +304,6 @@ export default function PosPage() {
     }
   };
 
-  const handleVoiceToggle = () => {
-    const nextValue = !voiceEnabled;
-    setVoiceFeatureFlag(nextValue);
-    setVoiceEnabled(nextValue);
-  };
-
-  const handleVoiceCheckout = async (payload) => {
-    if (recordAsDebt) {
-      return { success: false, message: 'Turn off debt checkout to use voice checkout.' };
-    }
-    if (cart.length === 0) {
-      return { success: false, message: 'Cart is empty.' };
-    }
-
-    const checkoutPayload = {
-      shopId: selectedShopId || (shops[0]?.id || null),
-      cashierId: user?.id || null,
-      items: cart.map(i => ({
-        productId: i.id,
-        quantity: i.qty,
-        unitPrice: parseFloat(i.selling_price || i.sellingPrice),
-      })),
-      grandTotal: payload.total,
-      amountTendered: payload.tendered,
-      changeGiven: payload.change,
-      paymentMethod: payload.method,
-      customerId: selectedCustomerId || undefined,
-    };
-
-    try {
-      const res = await api.post('/sales', checkoutPayload);
-      if (res.success && res.body) {
-        setLastSale(res.body);
-        setCart([]);
-        setAmountTendered('');
-        setRecordAsDebt(false);
-        setMobileCartOpen(false);
-        loadProducts();
-        invalidateDashboardData();
-        return {
-          success: true,
-          receiptNumber: res.body.receiptNumber || res.body.id,
-        };
-      } else {
-        return {
-          success: false,
-          message: res.message || 'Checkout failed. Please verify stock.',
-        };
-      }
-    } catch {
-      return {
-        success: false,
-        message: 'Network connection error while processing sale.',
-      };
-    }
-  };
-
-  const voice = useVoiceAssistant({
-    products,
-    cart,
-    grandTotal,
-    selectedShopId,
-    enabled: voiceEnabled,
-    onAddToCart: addToCart,
-    onUpdateQty: updateQty,
-    onRemoveFromCart: removeFromCart,
-    onClearCart: clearCart,
-    onCheckout: handleVoiceCheckout,
-    refreshProducts: loadProducts,
-    onAddCustomerSuccess: (newCust) => {
-      setCustomers(prev => [newCust, ...prev]);
-      notify({ type: 'success', message: `Customer ${newCust.name} added` });
-    },
-  });
-
   const filteredProducts = products.filter(p => {
     const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase());
     return matchesSearch;
@@ -377,6 +319,9 @@ export default function PosPage() {
   }, [catalogPageCount]);
 
   const activeShopObj = shops.find(s => s.id === selectedShopId) || shops[0];
+  
+  // Determine if user has admin privileges to approve debt
+  const canApproveDebt = user?.role === 'OWNER' || user?.role === 'SUPER_ADMIN';
 
   if (shopsLoading) {
     return (
@@ -384,20 +329,9 @@ export default function PosPage() {
         className={styles.posContainer}
         role="status"
         aria-live="polite"
-        style={{
-          minHeight: '70vh',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}
+        style={{ minHeight: '70vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
       >
-        <div style={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          gap: '14px',
-          color: 'var(--text-muted)',
-        }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '14px', color: 'var(--text-muted)' }}>
           <span className={styles.spinner} />
           <p style={{ margin: 0 }}>Loading your shops...</p>
         </div>
@@ -409,18 +343,9 @@ export default function PosPage() {
     return (
       <div className={styles.posContainer}>
         <div style={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          minHeight: '400px',
-          background: 'var(--bg-card)',
-          borderRadius: '12px',
-          padding: '40px',
-          textAlign: 'center',
-          border: '1px solid var(--border-default)',
-          margin: '20px auto',
-          maxWidth: '560px'
+          display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+          minHeight: '400px', background: 'var(--bg-card)', borderRadius: '12px', padding: '40px',
+          textAlign: 'center', border: '1px solid var(--border-default)', margin: '20px auto', maxWidth: '560px'
         }}>
           <MdStore size={56} style={{ color: 'var(--primary)', marginBottom: '16px', opacity: 0.8 }} />
           <h2 style={{ marginBottom: '8px', color: 'var(--text-main)' }}>No Managed Shops</h2>
@@ -429,11 +354,7 @@ export default function PosPage() {
               ? 'You have not registered any shops yet. Please navigate to the Shops management tab to create your first outlet.'
               : 'Your account has not been assigned to any shop yet. Please contact your shop owner/manager to assign you to a register counter.'}
           </p>
-          <button
-            onClick={loadShops}
-            className={styles.refreshBtn}
-            style={{ padding: '8px 20px', borderRadius: '8px', background: 'var(--primary)', color: '#fff' }}
-          >
+          <button onClick={loadShops} className={styles.refreshBtn} style={{ padding: '8px 20px', borderRadius: '8px', background: 'var(--primary)', color: '#fff' }}>
             <MdRefresh size={18} style={{ marginRight: '6px' }} />
             Reload Shops
           </button>
@@ -452,7 +373,6 @@ export default function PosPage() {
             value={selectedShopId}
             onChange={value => {
               if (value === selectedShopId) return;
-
               clearCart();
               setAmountTendered('');
               setPaymentMethod('CASH');
@@ -471,10 +391,7 @@ export default function PosPage() {
             startAdornment={<MdStore size={20} className={styles.storeIcon} />}
             options={shops.length === 0
               ? [{ value: '', label: 'Default Store' }]
-              : shops.map(shop => ({
-                value: shop.id,
-                label: `${shop.name} (${shop.type || 'Retail'})`
-              }))}
+              : shops.map(shop => ({ value: shop.id, label: `${shop.name} (${shop.type || 'Retail'})` }))}
           />
         </div>
 
@@ -482,22 +399,8 @@ export default function PosPage() {
           <span className={styles.cashierPill}>
             Cashier: <strong>{user?.username || 'Staff'}</strong>
           </span>
-          <button
-            type="button"
-            className={styles.refreshBtn}
-            onClick={handleVoiceToggle}
-            title={voiceEnabled ? 'Disable voice assistant' : 'Enable voice assistant'}
-            aria-label={voiceEnabled ? 'Disable voice assistant' : 'Enable voice assistant'}
-          >
-            {voiceEnabled ? 'Voice On' : 'Voice Off'}
-          </button>
-          <button className={styles.refreshBtn} onClick={loadProducts} title="Refresh catalog stock">
-            <MdRefresh size={18} />
-          </button>
         </div>
       </div>
-
-      {voiceEnabled && <VoiceAssistantHud voice={voice} />}
 
       <div className={styles.posGrid}>
         {/* Left Column: Catalog & Search */}
@@ -602,14 +505,13 @@ export default function PosPage() {
           />
         </div>
 
-        {/* Mobile Backdrop */}
         <div
           className={`${styles.mobileBackdrop} ${mobileCartOpen ? styles.mobileBackdropOpen : ''}`}
           onClick={() => setMobileCartOpen(false)}
           aria-hidden="true"
         />
 
-        {/* Right Column: Order Checkout Ticket (mobile drawer) */}
+        {/* Right Column: Order Checkout Ticket */}
         <div className={`${styles.checkoutPanel} ${mobileCartOpen ? styles.checkoutPanelOpen : ''}`}>
           <div className={styles.checkoutHeader}>
             <div>
@@ -618,15 +520,9 @@ export default function PosPage() {
             </div>
             <div className={styles.checkoutHeaderActions}>
               {cart.length > 0 && (
-                <button className={styles.clearCartBtn} onClick={clearCart}>
-                  Clear
-                </button>
+                <button className={styles.clearCartBtn} onClick={clearCart}>Clear</button>
               )}
-              <button
-                className={styles.mobileCartClose}
-                onClick={() => setMobileCartOpen(false)}
-                aria-label="Close cart"
-              >
+              <button className={styles.mobileCartClose} onClick={() => setMobileCartOpen(false)} aria-label="Close cart">
                 <MdClose size={20} />
               </button>
             </div>
@@ -650,46 +546,15 @@ export default function PosPage() {
                   <div key={item.id} className={styles.cartItem}>
                     <div className={styles.cartItemInfo}>
                       <div className={styles.cartItemName}>{item.name}</div>
-                      <div className={styles.cartItemRate}>
-                        KES {itemPrice.toLocaleString()} / {item.unit || 'item'}
-                      </div>
+                      <div className={styles.cartItemRate}>KES {itemPrice.toLocaleString()} / {item.unit || 'item'}</div>
                     </div>
-
                     <div className={styles.qtyController}>
-                      <button
-                        className={styles.qtyBtn}
-                        onClick={() => updateQty(item.id, item.qty - step)}
-                        aria-label={`Decrease ${item.name}`}
-                      >
-                        −
-                      </button>
-                      <input
-                        type="number"
-                        step={step}
-                        min="0"
-                        className={styles.qtyInput}
-                        value={item.qty}
-                        onChange={(e) => updateQty(item.id, parseFloat(e.target.value) || 0)}
-                      />
-                      <button
-                        className={styles.qtyBtn}
-                        onClick={() => updateQty(item.id, item.qty + step)}
-                        aria-label={`Increase ${item.name}`}
-                      >
-                        +
-                      </button>
+                      <button className={styles.qtyBtn} onClick={() => updateQty(item.id, item.qty - step)} aria-label={`Decrease ${item.name}`}>−</button>
+                      <input type="number" step={step} min="0" className={styles.qtyInput} value={item.qty} onChange={(e) => updateQty(item.id, parseFloat(e.target.value) || 0)} />
+                      <button className={styles.qtyBtn} onClick={() => updateQty(item.id, item.qty + step)} aria-label={`Increase ${item.name}`}>+</button>
                     </div>
-
-                    <div className={styles.cartItemSubtotal}>
-                      KES {lineTotal.toLocaleString()}
-                    </div>
-
-                    <button
-                      className={styles.removeLineBtn}
-                      onClick={() => removeFromCart(item.id)}
-                      title="Remove item"
-                      aria-label={`Remove ${item.name}`}
-                    >
+                    <div className={styles.cartItemSubtotal}>KES {lineTotal.toLocaleString()}</div>
+                    <button className={styles.removeLineBtn} onClick={() => removeFromCart(item.id)} title="Remove item" aria-label={`Remove ${item.name}`}>
                       <MdDelete size={17} />
                     </button>
                   </div>
@@ -698,39 +563,18 @@ export default function PosPage() {
             )}
           </div>
 
-          {/* Checkout Controls — pinned footer */}
+          {/* Checkout Controls */}
           <div className={styles.checkoutFooter}>
             {!recordAsDebt && (
               <div className={styles.methodSelector}>
-                <button
-                  type="button"
-                  className={`${styles.methodBtn} ${paymentMethod === 'CASH' ? styles.methodActive : ''}`}
-                  onClick={() => setPaymentMethod('CASH')}
-                >
-                  <MdPayments size={18} />
-                  <span>Cash</span>
+                <button type="button" className={`${styles.methodBtn} ${paymentMethod === 'CASH' ? styles.methodActive : ''}`} onClick={() => setPaymentMethod('CASH')}>
+                  <MdPayments size={18} /><span>Cash</span>
                 </button>
-                <button
-                  type="button"
-                  className={`${styles.methodBtn} ${paymentMethod === 'MPESA' ? styles.methodActive : ''}`}
-                  onClick={() => {
-                    setPaymentMethod('MPESA');
-                    setAmountTendered(grandTotal.toString());
-                  }}
-                >
-                  <MdPhoneIphone size={18} />
-                  <span>M-Pesa</span>
+                <button type="button" className={`${styles.methodBtn} ${paymentMethod === 'MPESA' ? styles.methodActive : ''}`} onClick={() => { setPaymentMethod('MPESA'); setAmountTendered(grandTotal.toString()); }}>
+                  <MdPhoneIphone size={18} /><span>M-Pesa</span>
                 </button>
-                <button
-                  type="button"
-                  className={`${styles.methodBtn} ${paymentMethod === 'CARD' ? styles.methodActive : ''}`}
-                  onClick={() => {
-                    setPaymentMethod('CARD');
-                    setAmountTendered(grandTotal.toString());
-                  }}
-                >
-                  <MdCreditCard size={18} />
-                  <span>Card</span>
+                <button type="button" className={`${styles.methodBtn} ${paymentMethod === 'CARD' ? styles.methodActive : ''}`} onClick={() => { setPaymentMethod('CARD'); setAmountTendered(grandTotal.toString()); }}>
+                  <MdCreditCard size={18} /><span>Card</span>
                 </button>
               </div>
             )}
@@ -757,12 +601,7 @@ export default function PosPage() {
                     <label>Amount Tendered</label>
                     <div className={styles.tenderInputWrap}>
                       <span>KES</span>
-                      <input
-                        type="number"
-                        placeholder="0.00"
-                        value={amountTendered}
-                        onChange={e => setAmountTendered(e.target.value)}
-                      />
+                      <input type="number" placeholder="0.00" value={amountTendered} onChange={e => setAmountTendered(e.target.value)} />
                     </div>
                   </div>
                   <div className={styles.changeRow}>
@@ -776,16 +615,24 @@ export default function PosPage() {
             {recordAsDebt ? (
               <>
                 <div className={styles.debtCheckoutNotice}>
-                  This sale will be linked to {selectedCustomerName || 'the selected customer'} as an unpaid debt.
-                  {selectedCustomerCreditEligible ? '' : ' Select a credit-approved customer to continue.'}
+                  <div>
+                    This sale will be linked to {selectedCustomerName || 'the selected customer'} as an unpaid debt.
+                    {selectedCustomerCreditEligible ? '' : ' Select a credit-approved customer to continue.'}
+                  </div>
+                  {/* Approve Debt Button (Admin Only) */}
+                  {!selectedCustomerCreditEligible && selectedCustomerId && canApproveDebt && (
+                    <button
+                      type="button"
+                      className={styles.approveDebtBtn}
+                      onClick={handleApproveCredit}
+                      disabled={loading}
+                    >
+                      <MdCheckCircle size={16} /> Approve Customer for Credit
+                    </button>
+                  )}
                 </div>
                 <div className={styles.checkoutActions}>
-                  <button
-                    type="button"
-                    className={styles.debtCancelBtn}
-                    onClick={() => setRecordAsDebt(false)}
-                    disabled={loading}
-                  >
+                  <button type="button" className={styles.debtCancelBtn} onClick={() => setRecordAsDebt(false)} disabled={loading}>
                     Cancel
                   </button>
                   <button
@@ -794,41 +641,16 @@ export default function PosPage() {
                     onClick={() => handleCheckout(true)}
                     disabled={cart.length === 0 || loading || !selectedCustomerId || !selectedCustomerCreditEligible}
                   >
-                    {loading ? (
-                      <>
-                        <span className={styles.spinner} />
-                        Recording…
-                      </>
-                    ) : (
-                      `Record Debt · KES ${grandTotal.toLocaleString()}`
-                    )}
+                    {loading ? <><span className={styles.spinner} /> Recording…</> : `Record Debt · KES ${grandTotal.toLocaleString()}`}
                   </button>
                 </div>
               </>
             ) : (
               <div className={styles.checkoutActions}>
-                <button
-                  type="button"
-                  className={styles.checkoutBtn}
-                  onClick={() => handleCheckout(false)}
-                  disabled={cart.length === 0 || loading}
-                >
-                  {loading ? (
-                    <>
-                      <span className={styles.spinner} />
-                      Processing…
-                    </>
-                  ) : (
-                    `COMPLETE SALE: KES ${grandTotal.toLocaleString()}`
-                  )}
+                <button type="button" className={styles.checkoutBtn} onClick={() => handleCheckout(false)} disabled={cart.length === 0 || loading}>
+                  {loading ? <><span className={styles.spinner} /> Processing…</> : `COMPLETE SALE: KES ${grandTotal.toLocaleString()}`}
                 </button>
-                <button
-                  type="button"
-                  className={styles.debtToggleBtn}
-                  onClick={() => setRecordAsDebt(true)}
-                  disabled={cart.length === 0 || loading}
-                  aria-pressed={false}
-                >
+                <button type="button" className={styles.debtToggleBtn} onClick={() => setRecordAsDebt(true)} disabled={cart.length === 0 || loading} aria-pressed={false}>
                   Debt
                 </button>
               </div>
@@ -839,29 +661,20 @@ export default function PosPage() {
 
       {/* Sticky mobile cart bar */}
       {cart.length > 0 && !mobileCartOpen && (
-        <button
-          type="button"
-          className={styles.mobileCartBar}
-          onClick={() => setMobileCartOpen(true)}
-          aria-label={`View cart, ${cart.length} items, total KES ${grandTotal.toLocaleString()}`}
-        >
-          <span className={styles.mobileCartCount}>
-            {cart.length} item{cart.length !== 1 ? 's' : ''}
-          </span>
+        <button type="button" className={styles.mobileCartBar} onClick={() => setMobileCartOpen(true)} aria-label={`View cart, ${cart.length} items, total KES ${grandTotal.toLocaleString()}`}>
+          <span className={styles.mobileCartCount}>{cart.length} item{cart.length !== 1 ? 's' : ''}</span>
           <span className={styles.mobileCartTotal}>KES {grandTotal.toLocaleString()}</span>
           <span className={styles.mobileCartView}>View Cart →</span>
         </button>
       )}
 
-      {/* Receipt Modal (unchanged) */}
+      {/* Receipt Modal */}
       {lastSale && (
         <div className={styles.receiptOverlay}>
           <div className={styles.receiptModal}>
             <div className={styles.modalHeader}>
               <h3>{lastSale.paymentMethod === 'DEBT' ? 'Customer Debt Recorded' : 'Sale Completed Successfully!'}</h3>
-              <button className={styles.closeBtn} onClick={() => setLastSale(null)}>
-                <MdClose size={20} />
-              </button>
+              <button className={styles.closeBtn} onClick={() => setLastSale(null)}><MdClose size={20} /></button>
             </div>
 
             <div className={`receipt-printable ${styles.receiptPaper}`}>
@@ -882,13 +695,7 @@ export default function PosPage() {
               <div className={styles.receiptDivider}>--------------------------------</div>
 
               <table className={styles.receiptTable}>
-                <thead>
-                  <tr>
-                    <th align="left">Item</th>
-                    <th align="center">Qty</th>
-                    <th align="right">Amount</th>
-                  </tr>
-                </thead>
+                <thead><tr><th align="left">Item</th><th align="center">Qty</th><th align="right">Amount</th></tr></thead>
                 <tbody>
                   {(lastSale.items || []).map((it, idx) => (
                     <tr key={idx}>
@@ -916,25 +723,14 @@ export default function PosPage() {
 
               <div className={styles.receiptDivider}>================================</div>
 
-              <div className={styles.receiptFooter}>
-                <p>Thank you for your purchase!</p>
-              </div>
+              <div className={styles.receiptFooter}><p>Thank you for your purchase!</p></div>
             </div>
 
             <div className={styles.modalActions}>
               <button type="button" className={styles.printBtn} onClick={() => window.print()}>
-                <MdPrint size={18} />
-                <span>Print Receipt</span>
+                <MdPrint size={18} /><span>Print Receipt</span>
               </button>
-              <button
-                type="button"
-                className={styles.doneBtn}
-                onClick={() => {
-                  setLastSale(null);
-                  clearCart();
-                  searchInputRef.current?.focus();
-                }}
-              >
+              <button type="button" className={styles.doneBtn} onClick={() => { setLastSale(null); clearCart(); searchInputRef.current?.focus(); }}>
                 New Sale
               </button>
             </div>

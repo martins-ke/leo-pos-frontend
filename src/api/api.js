@@ -1,7 +1,8 @@
-const configuredBaseUrl = (import.meta.env.VITE_LEO_API_BASE_URL || '').trim();
+const metaEnv = (typeof import.meta !== 'undefined' && import.meta.env) ? import.meta.env : {};
+const configuredBaseUrl = (metaEnv.VITE_LEO_API_BASE_URL || '').trim();
 
 const BASE_URL = (
-  configuredBaseUrl || (import.meta.env.DEV ? 'http://localhost:8181' : '')
+  configuredBaseUrl || (metaEnv.DEV ? 'http://localhost:8181' : '')
 ).replace(/\/+$/, '');
 
 const REQUEST_STARTED = 'leo-api-request-start';

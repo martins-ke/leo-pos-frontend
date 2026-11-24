@@ -480,10 +480,12 @@
 
 .heroHeadline {
   font-size: clamp(1.85rem, 2.75vw, 3.1rem);
-  font-weight: 900;
+  font-weight: 700;
   letter-spacing: -0.04em;
   line-height: 1.16;
-  color: #0f172a;
+  color: #162a58;
+  font-style: italic;
+  text-shadow: 5px 5px 15px rgba(125, 114, 114, 0.952);
   margin: 0 0 1.25rem;
 }
 
@@ -606,7 +608,7 @@
 .terminalWindow {
   position: relative;
   z-index: 2;
-  background: #0f131a;
+  background: rgba(5, 9, 13, 0.742);
   border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 0.9rem;
   overflow: auto;
